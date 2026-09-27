@@ -13,8 +13,8 @@ edit_uri: edit/main/docs/
 # Theme configuration
 theme:
   name: material
-  favicon: assets/logos/t1k-icon-accent.svg # the kit's small-size fallback
-  logo: assets/logos/t1k-mark-paper.svg # single-colour light: the header is dark in both schemes
+  favicon: assets/logos/t1k-favicon.svg # the kit's favicon (favicon.ico and the 16/32 px PNGs sit beside it)
+  logo: assets/logos/t1k-logo.svg # the lavender mark: the header is dark in both schemes
   features:
     - announce.dismiss
     - content.action.edit
