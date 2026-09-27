@@ -1,3 +1,6 @@
+![T1K banner](assets/logos/t1k-banner-dark.png#only-dark)
+![T1K banner](assets/logos/t1k-banner-light.png#only-light)
+
 # T1K
 
 T1K converts one JSON structure into another, driven by a declarative mapping

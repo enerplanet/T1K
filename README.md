@@ -1,3 +1,6 @@
+![T1K banner](docs/assets/logos/t1k-banner-dark.png#gh-dark-mode-only)
+![T1K banner](docs/assets/logos/t1k-banner-light.png#gh-light-mode-only)
+
 # T1K
 
 [![CI](https://github.com/enerplanet/T1K/actions/workflows/ci.yml/badge.svg)](https://github.com/enerplanet/T1K/actions/workflows/ci.yml)

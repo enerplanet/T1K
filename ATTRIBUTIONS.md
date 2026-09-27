@@ -6,6 +6,7 @@ T1K itself depends only on the Go standard library.
 |---|---|---|---|
 | MkDocs | <https://www.mkdocs.org/> | BSD-2-Clause | documentation site generator (build time only) |
 | Material for MkDocs | <https://squidfunk.github.io/mkdocs-material/> | MIT | documentation theme (build time only) |
+| T1K mark and banners in `docs/assets/logos/` (`t1k-*`) | BigGeoData & Spatial AI, Technische Hochschule Deggendorf | project assets | README and documentation branding |
 | Spatial AI logos in `docs/assets/logos/` | BigGeoData & Spatial AI, Technische Hochschule Deggendorf | project assets | documentation branding |
 
 The mapping in `config/enerplanet-to-meme.json` reproduces field names and

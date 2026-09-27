@@ -13,8 +13,8 @@ edit_uri: edit/main/docs/
 # Theme configuration
 theme:
   name: material
-  favicon: assets/logos/favicon.svg
-  logo: assets/logos/spatialai-mark-blue-dark.svg
+  favicon: assets/logos/t1k-logo-light.png # the dark mark: readable on light and dark browser tabs
+  logo: assets/logos/t1k-logo.svg # the pale mark: the header is dark (indigo or black) in both schemes
   features:
     - announce.dismiss
     - content.action.edit
