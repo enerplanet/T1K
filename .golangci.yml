@@ -1,0 +1,42 @@
+version: "2"
+
+run:
+  timeout: 5m
+
+linters:
+  default: none
+  enable:
+    - errcheck
+    - govet
+    - staticcheck
+    - ineffassign
+    - unused
+    - revive
+    - gosec
+    - misspell
+    - gocritic
+    - errorlint
+  settings:
+    errcheck:
+      exclude-functions:
+        # Writes to the CLI's stdout/stderr: a failed write there has no
+        # better handling than the exit code the command already returns.
+        - fmt.Fprint
+        - fmt.Fprintf
+        - fmt.Fprintln
+    revive:
+      rules:
+        - name: package-comments
+          disabled: true
+    gosec:
+      excludes:
+        # G304/G703: the CLI reads and writes the files its user names on
+        # the command line; that is its purpose.
+        - G304
+        - G703
+        # G306: written documents are data the user asked for, not secrets.
+        - G306
+
+formatters:
+  enable:
+    - gofmt
