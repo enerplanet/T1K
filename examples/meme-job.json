@@ -1,0 +1,231 @@
+{
+  "experiment": {
+    "allow_unmet_demand": {
+      "enabled": true,
+      "penalty_price": 1000000
+    },
+    "mode": "plan",
+    "objective": "min_cost",
+    "solver": {
+      "name": "highs"
+    }
+  },
+  "model": {
+    "carriers": {
+      "electricity": {
+        "name": "Electricity",
+        "unit": "MWh"
+      }
+    },
+    "metadata": {
+      "description": "EnerPlanET calculation payload converted by T1K",
+      "name": "158_1790500000"
+    },
+    "nodes": {
+      "1": {
+        "coords": {
+          "lat": 52.10148,
+          "lon": 6.02745
+        },
+        "name": "268428040"
+      },
+      "2": {
+        "coords": {
+          "lat": 52.10171,
+          "lon": 6.02801
+        },
+        "name": "268428101"
+      },
+      "3": {
+        "coords": {
+          "lat": 52.10341,
+          "lon": 6.03088
+        },
+        "name": "268429377"
+      },
+      "4": {
+        "coords": {
+          "lat": 52.09877,
+          "lon": 6.04011
+        },
+        "name": "268431250"
+      },
+      "trafo_2585": {
+        "coords": {
+          "lat": 52.101322357,
+          "lon": 6.027322234
+        },
+        "name": "Trafo_2585"
+      },
+      "trafo_2590": {
+        "coords": {
+          "lat": 52.10355,
+          "lon": 6.03102
+        },
+        "name": "Trafo_2590"
+      }
+    },
+    "technologies": {
+      "battery_storage-1": {
+        "capacity": {
+          "expandable": true,
+          "max": 8.715
+        },
+        "carrier_in": "electricity",
+        "carrier_out": "electricity",
+        "costs": {
+          "monetary": {
+            "fixed_om": 25190,
+            "investment_per_capacity": 1028000,
+            "investment_per_energy_capacity": 1007930
+          }
+        },
+        "interest_rate": 0.02,
+        "lifetime": 11,
+        "node": "1",
+        "role": "storage",
+        "storage": {
+          "charge_eff": 0.97,
+          "discharge_eff": 0.97,
+          "energy_capacity": {
+            "expandable": true,
+            "max": 8.8893
+          },
+          "initial_soc": 0,
+          "self_discharge": 0
+        }
+      },
+      "demand-1": {
+        "carrier_in": "electricity",
+        "demand_profile": 0.000427511,
+        "node": "1",
+        "role": "demand"
+      },
+      "demand-2": {
+        "carrier_in": "electricity",
+        "demand_profile": 0.014611872,
+        "node": "2",
+        "role": "demand"
+      },
+      "demand-3": {
+        "carrier_in": "electricity",
+        "demand_profile": 0.00239726,
+        "node": "3",
+        "role": "demand"
+      },
+      "demand-4": {
+        "carrier_in": "electricity",
+        "demand_profile": 0.00109589,
+        "node": "4",
+        "role": "demand"
+      },
+      "pv_supply-1": {
+        "capacity": {
+          "expandable": true,
+          "max": 0.008,
+          "min": 0
+        },
+        "carrier_out": "electricity",
+        "costs": {
+          "monetary": {
+            "fixed_om": 8000,
+            "investment_per_capacity": 575000
+          }
+        },
+        "efficiency": 0.9,
+        "interest_rate": 0.02,
+        "lifetime": 25,
+        "native": {
+          "calliope": {
+            "flow_out_parasitic_eff": 1.0
+          }
+        },
+        "node": "1",
+        "performance": {
+          "model": "pv",
+          "params": {
+            "azimuth": 180,
+            "loss": 0.14,
+            "tilt": 35
+          },
+          "type": "physics"
+        },
+        "role": "supply"
+      }
+    },
+    "time": {
+      "end": "2018-01-02T00:00:00Z",
+      "resolution": "1H",
+      "start": "2018-01-01T00:00:00Z"
+    },
+    "trade": {
+      "grid-trafo_2585": {
+        "carrier": "electricity",
+        "export": {},
+        "import": {
+          "limit": 0.16,
+          "price": 300
+        },
+        "node": "trafo_2585"
+      },
+      "grid-trafo_2590": {
+        "carrier": "electricity",
+        "export": {},
+        "import": {
+          "limit": 0.25,
+          "price": 300
+        },
+        "node": "trafo_2590"
+      },
+      "non_households-2": {
+        "carrier": "electricity",
+        "import": {
+          "price": 235.9
+        },
+        "node": "2"
+      }
+    },
+    "transmission": {
+      "lv_0": {
+        "bidirectional": true,
+        "capacity": {
+          "expandable": true
+        },
+        "carrier": "electricity",
+        "distance": 0.0182,
+        "from": "1",
+        "to": "trafo_2585"
+      },
+      "lv_1": {
+        "bidirectional": true,
+        "capacity": {
+          "expandable": true
+        },
+        "carrier": "electricity",
+        "distance": 0.0621,
+        "from": "2",
+        "to": "trafo_2585"
+      },
+      "lv_3": {
+        "bidirectional": true,
+        "capacity": {
+          "expandable": true
+        },
+        "carrier": "electricity",
+        "distance": 0.0247,
+        "from": "3",
+        "to": "trafo_2590"
+      },
+      "mv_2": {
+        "bidirectional": true,
+        "capacity": {
+          "expandable": true
+        },
+        "carrier": "electricity",
+        "distance": 0.412,
+        "from": "trafo_2585",
+        "to": "trafo_2590"
+      }
+    }
+  }
+}
