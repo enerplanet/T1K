@@ -1,35 +1,63 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
-         <loc>https://THD-Spatial-AI.github.io/gitHub-template/</loc>
+         <loc>https://enerplanet.github.io/T1K/</loc>
          <lastmod>2026-09-27</lastmod>
     </url>
     <url>
-         <loc>https://THD-Spatial-AI.github.io/gitHub-template/getting-started/branch-naming/</loc>
+         <loc>https://enerplanet.github.io/T1K/configuration/converters/</loc>
          <lastmod>2026-09-27</lastmod>
     </url>
     <url>
-         <loc>https://THD-Spatial-AI.github.io/gitHub-template/getting-started/branch-rules/</loc>
+         <loc>https://enerplanet.github.io/T1K/configuration/overview/</loc>
          <lastmod>2026-09-27</lastmod>
     </url>
     <url>
-         <loc>https://THD-Spatial-AI.github.io/gitHub-template/getting-started/commit-conventions/</loc>
+         <loc>https://enerplanet.github.io/T1K/configuration/paths/</loc>
          <lastmod>2026-09-27</lastmod>
     </url>
     <url>
-         <loc>https://THD-Spatial-AI.github.io/gitHub-template/getting-started/documentation-setup/</loc>
+         <loc>https://enerplanet.github.io/T1K/configuration/reverse/</loc>
          <lastmod>2026-09-27</lastmod>
     </url>
     <url>
-         <loc>https://THD-Spatial-AI.github.io/gitHub-template/getting-started/legal-sync/</loc>
+         <loc>https://enerplanet.github.io/T1K/configuration/rules/</loc>
          <lastmod>2026-09-27</lastmod>
     </url>
     <url>
-         <loc>https://THD-Spatial-AI.github.io/gitHub-template/getting-started/open-source-checklist/</loc>
+         <loc>https://enerplanet.github.io/T1K/development/architecture/</loc>
          <lastmod>2026-09-27</lastmod>
     </url>
     <url>
-         <loc>https://THD-Spatial-AI.github.io/gitHub-template/getting-started/repository-naming/</loc>
+         <loc>https://enerplanet.github.io/T1K/development/testing/</loc>
+         <lastmod>2026-09-27</lastmod>
+    </url>
+    <url>
+         <loc>https://enerplanet.github.io/T1K/getting-started/branch-naming/</loc>
+         <lastmod>2026-09-27</lastmod>
+    </url>
+    <url>
+         <loc>https://enerplanet.github.io/T1K/getting-started/commit-conventions/</loc>
+         <lastmod>2026-09-27</lastmod>
+    </url>
+    <url>
+         <loc>https://enerplanet.github.io/T1K/mappings/enerplanet-to-meme/</loc>
+         <lastmod>2026-09-27</lastmod>
+    </url>
+    <url>
+         <loc>https://enerplanet.github.io/T1K/usage/cli/</loc>
+         <lastmod>2026-09-27</lastmod>
+    </url>
+    <url>
+         <loc>https://enerplanet.github.io/T1K/usage/installation/</loc>
+         <lastmod>2026-09-27</lastmod>
+    </url>
+    <url>
+         <loc>https://enerplanet.github.io/T1K/usage/library/</loc>
+         <lastmod>2026-09-27</lastmod>
+    </url>
+    <url>
+         <loc>https://enerplanet.github.io/T1K/usage/quickstart/</loc>
          <lastmod>2026-09-27</lastmod>
     </url>
 </urlset>

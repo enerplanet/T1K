@@ -12,13 +12,13 @@
         <meta name="author" content="BigGeoData & Spatial AI, Technische Hochschule Deggendorf">
       
       
-        <link rel="canonical" href="https://enerplanet.github.io/T1K/getting-started/branch-naming/">
+        <link rel="canonical" href="https://enerplanet.github.io/T1K/mappings/enerplanet-to-meme/">
       
       
-        <link rel="prev" href="../../development/testing/">
+        <link rel="prev" href="../../configuration/reverse/">
       
       
-        <link rel="next" href="../commit-conventions/">
+        <link rel="next" href="../../development/architecture/">
       
       
         
@@ -29,7 +29,7 @@
     
     
       
-        <title>Branch Naming - T1K</title>
+        <title>EnerPlanET to MEME - T1K</title>
       
     
     
@@ -80,7 +80,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#branch-naming-convention" class="md-skip">
+        <a href="#enerplanet-to-meme" class="md-skip">
           Skip to content
         </a>
       
@@ -115,7 +115,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Branch Naming
+              EnerPlanET to MEME
             
           </span>
         </div>
@@ -298,11 +298,13 @@
   
   
   
+    
+  
   
     
     
-      <li class="md-tabs__item">
-        <a href="../../mappings/enerplanet-to-meme/" class="md-tabs__link">
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="./" class="md-tabs__link">
           
   
   
@@ -342,13 +344,11 @@
   
   
   
-    
-  
   
     
     
-      <li class="md-tabs__item md-tabs__item--active">
-        <a href="./" class="md-tabs__link">
+      <li class="md-tabs__item">
+        <a href="../../getting-started/branch-naming/" class="md-tabs__link">
           
   
   
@@ -573,6 +573,8 @@
       
   
   
+    
+  
   
   
     
@@ -584,24 +586,25 @@
     
     
       
+        
+        
+      
       
         
       
     
     
       
-        
-        
-      
     
-    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
-  
-  
-  
-    <a href="../../mappings/enerplanet-to-meme/" class="md-nav__link">
-      
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
   
   
   <span class="md-ellipsis">
@@ -615,12 +618,224 @@
   
   
 
-      
-        <span class="md-nav__icon md-icon"></span>
-      
-    </a>
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Mappings
   
 
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    EnerPlanET to MEME
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    EnerPlanET to MEME
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#the-two-documents" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The two documents
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#decisions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Decisions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#field-mapping" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Field mapping
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Field mapping">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#payload-root" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Payload root
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#connections" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Connections
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#features" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Features
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#technologies" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Technologies
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#not-carried" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Not carried
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#meme-target-compatibility" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MEME target compatibility
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-reverse-direction" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The reverse direction
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#adapting-the-mapping" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Adapting the mapping
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
       
     </li>
   
@@ -689,40 +904,37 @@
       
   
   
+  
+  
     
+    
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
   
   
   
-    
-    
+    <a href="../../getting-started/branch-naming/" class="md-nav__link">
       
-        
-      
-        
-      
-    
-    
-    
-      
-        
-        
-      
-      
-        
-      
-    
-    
-      
-    
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
-      
-        
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" checked>
-        
-          
-          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
-            
   
   
   <span class="md-ellipsis">
@@ -736,213 +948,12 @@
   
   
 
-            <span class="md-nav__icon md-icon"></span>
-          </label>
-        
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="true">
-          <label class="md-nav__title" for="__nav_6">
-            <span class="md-nav__icon md-icon"></span>
-            
-  
-    Contributing
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
   
 
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-    
-  
-  
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Branch Naming
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Branch Naming
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#format" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Format
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#types" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Types
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#rules" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Rules
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#exempt-branches" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Exempt branches
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#examples" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Examples
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#invalid-examples" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Invalid examples
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#github-auto-generated-branch-names" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        GitHub auto-generated branch names
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#fixing-a-failed-branch-name-check" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Fixing a failed branch name check
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../commit-conventions/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Commit Conventions
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
       
     </li>
   
@@ -994,7 +1005,7 @@
         <a href="./" class="md-path__link">
           
   <span class="md-ellipsis">
-    Contributing
+    Mappings
   </span>
 
         </a>
@@ -1013,7 +1024,7 @@
 
 
   
-    <a href="https://github.com/enerplanet/T1K/edit/main/docs/getting-started/branch-naming.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+    <a href="https://github.com/enerplanet/T1K/edit/main/docs/mappings/enerplanet-to-meme.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
       
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
     </a>
@@ -1022,145 +1033,379 @@
     
       
     
-    <a href="https://github.com/enerplanet/T1K/raw/main/docs/getting-started/branch-naming.md" title="View source of this page" class="md-content__button md-icon">
+    <a href="https://github.com/enerplanet/T1K/raw/main/docs/mappings/enerplanet-to-meme.md" title="View source of this page" class="md-content__button md-icon">
       
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 18c.56 0 1 .44 1 1s-.44 1-1 1-1-.44-1-1 .44-1 1-1m0-3c-2.73 0-5.06 1.66-6 4 .94 2.34 3.27 4 6 4s5.06-1.66 6-4c-.94-2.34-3.27-4-6-4m0 6.5a2.5 2.5 0 0 1-2.5-2.5 2.5 2.5 0 0 1 2.5-2.5 2.5 2.5 0 0 1 2.5 2.5 2.5 2.5 0 0 1-2.5 2.5M9.27 20H6V4h7v5h5v4.07c.7.08 1.36.25 2 .49V8l-6-6H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h4.5a8.2 8.2 0 0 1-1.23-2"/></svg>
     </a>
   
 
 
-<h1 id="branch-naming-convention">Branch Naming Convention<a class="headerlink" href="#branch-naming-convention" title="Permanent link">&para;</a></h1>
-<p>All repositories follow the <a href="https://conventional-branch.github.io/">Conventional Branch</a> specification, extended with additional types to mirror the commit convention.</p>
-<p>Branch names are automatically validated when a pull request is opened. A PR cannot be merged until the branch name passes the check.</p>
-<h2 id="format">Format<a class="headerlink" href="#format" title="Permanent link">&para;</a></h2>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>&lt;type&gt;/&lt;description&gt;
-</span></code></pre></div>
-<h2 id="types">Types<a class="headerlink" href="#types" title="Permanent link">&para;</a></h2>
-<table>
-<thead>
-<tr>
-<th>Type</th>
-<th>Purpose</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>feat/</code> or <code>feature/</code></td>
-<td>New feature</td>
-</tr>
-<tr>
-<td><code>fix/</code> or <code>bugfix/</code></td>
-<td>Bug fix</td>
-</tr>
-<tr>
-<td><code>hotfix/</code></td>
-<td>Urgent production fix (branches off <code>main</code>)</td>
-</tr>
-<tr>
-<td><code>release/</code></td>
-<td>Release preparation</td>
-</tr>
-<tr>
-<td><code>chore/</code></td>
-<td>Tooling, dependencies, CI changes</td>
-</tr>
-<tr>
-<td><code>docs/</code></td>
-<td>Documentation only</td>
-</tr>
-<tr>
-<td><code>refactor/</code></td>
-<td>Code restructuring, no behaviour change</td>
-</tr>
-<tr>
-<td><code>test/</code></td>
-<td>Tests only</td>
-</tr>
-<tr>
-<td><code>style/</code></td>
-<td>Formatting, whitespace — no logic changes</td>
-</tr>
-<tr>
-<td><code>perf/</code></td>
-<td>Performance improvements</td>
-</tr>
-</tbody>
-</table>
-<h2 id="rules">Rules<a class="headerlink" href="#rules" title="Permanent link">&para;</a></h2>
+<h1 id="enerplanet-to-meme">EnerPlanET to MEME<a class="headerlink" href="#enerplanet-to-meme" title="Permanent link">&para;</a></h1>
+<p><code>config/enerplanet-to-meme.json</code>, the mapping embedded in the package,
+converts the calculation payload EnerPlanET's backend sends to its simulation
+webservice into a MEME job, the body of MEME's <code>POST /simulate</code>. This page
+records what it maps, the decisions behind it and what the reverse direction
+restores.</p>
+<h2 id="the-two-documents">The two documents<a class="headerlink" href="#the-two-documents" title="Permanent link">&para;</a></h2>
+<p><strong>Source:</strong> the <code>CalculationPayload</code> built by
+<code>enerplanet/backend/internal/payload/payload.go</code>. Its <code>topology</code> is an array
+of connections; each connection has a <code>from</code> feature, and, unless the
+building stands alone, a <code>to</code> feature, a <code>length</code> in km and a <code>pipe</code> kind
+(<code>lv</code> building to transformer, <code>mv</code> transformer to transformer). A feature is
+a GeoJSON point with <code>properties</code> (identity, usage class, annual demands) and
+a <code>techs</code> object keyed by the technology catalogue (<code>pv_supply</code>,
+<code>battery_storage</code>, ...) whose entries hold Calliope 0.6 constraint names in
+kW, kWh and EUR/kW. The simulation engine's
+<code>servicehub/schemas/calliope.json</code> describes the shape.</p>
+<p><strong>Target:</strong> MEME's canonical model (<code>internal/model</code> in the MEME repository):
+<code>nodes</code>, <code>technologies</code>, <code>transmission</code> and <code>trade</code> keyed by identifiers,
+quantities in MW, MWh and EUR/MW, plus an <code>experiment</code>. MEME decodes the body
+with unknown fields disallowed, so the job may contain nothing MEME does not
+define.</p>
+<h2 id="decisions">Decisions<a class="headerlink" href="#decisions" title="Permanent link">&para;</a></h2>
 <ul>
-<li><strong>Lowercase only</strong> — no uppercase letters</li>
-<li><strong>Hyphens as separators</strong> — no underscores, no spaces</li>
-<li><strong>No consecutive hyphens or dots</strong> — <code>--</code> and <code>..</code> are not allowed</li>
-<li><strong>No leading or trailing hyphens or dots</strong></li>
-<li><strong>Dots only for version numbers</strong> — e.g. <code>release/v1.2.0</code></li>
-<li><strong>Ticket numbers are allowed</strong> — e.g. <code>feat/issue-123-login-page</code></li>
+<li><strong>A node per feature, an arc per connection.</strong> Every building and
+  transformer becomes a node keyed by its feature <code>id</code> (<code>1</code>, <code>trafo_2585</code>);
+  every connection becomes a bidirectional transmission arc keyed by pipe
+  kind and position (<code>lv_0</code>, <code>mv_2</code>) with the length as <code>distance</code>. The
+  topology is therefore preserved exactly and the reverse can rebuild it.
+  (The translator on EnerPlanET's <code>feature/heat-integration</code> branch instead
+  sums buildings into one node per transformer area; that aggregation cannot
+  be inverted, so T1K keeps the features.)</li>
+<li><strong>The transformer is the grid connection.</strong> As in the simulation engine,
+  which attaches a <code>transformer_supply</code> technology capped by the rated power,
+  each transformer gets a <code>trade</code> entry importing at most its rating (kVA as
+  MW) at 300 EUR/MWh, the tariff of that template technology, with unpaid
+  export. <code>households_supply</code> and <code>non_households_supply</code> attached to a
+  building become a trade at the building with their own tariff.</li>
+<li><strong>kW to MW, divided by 1000</strong>, for capacities, storage sizes and the
+  transformer rating; EUR/kW, EUR/kWh and EUR/kW/a are multiplied by 1000.</li>
+<li><strong>Annual demand as average power.</strong> <code>demand_energy</code> (kWh/a) becomes a
+  constant <code>demand_profile</code> in MW (divided by 8760 h and 1000), rounded to
+  nine decimals; the reverse rounds back to whole kWh. A time series can be
+  put in its place by pointing the rule at <code>model.timeseries</code>.</li>
+<li><strong>Run settings from the Calliope template:</strong> mode <code>plan</code>, objective
+  <code>min_cost</code>, solver <code>highs</code>, unmet demand allowed at a penalty of 1e6
+  EUR/MWh (<code>ensure_feasibility</code> with <code>bigM: 1e6</code>).</li>
+<li><strong>Electricity only.</strong> Heat demand (<code>demand_heat</code>) is carried by no rule;
+  the reverse writes 0.</li>
 </ul>
-<h2 id="exempt-branches">Exempt branches<a class="headerlink" href="#exempt-branches" title="Permanent link">&para;</a></h2>
-<p>The following branches are exempt from naming rules:</p>
-<p><code>main</code>, <code>master</code>, <code>dev</code>, <code>develop</code>, <code>staging</code></p>
-<h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">&para;</a></h2>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>feat/add-geospatial-query
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>fix/token-expiry-validation
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>hotfix/critical-data-loss
-</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>docs/update-api-reference
-</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>chore/upgrade-dependencies
-</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>release/v2.1.0
-</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>refactor/simplify-coordinate-transform
-</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>test/add-export-unit-tests
-</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>feat/issue-42-user-authentication
-</span></code></pre></div>
-<h2 id="invalid-examples">Invalid examples<a class="headerlink" href="#invalid-examples" title="Permanent link">&para;</a></h2>
+<h2 id="field-mapping">Field mapping<a class="headerlink" href="#field-mapping" title="Permanent link">&para;</a></h2>
+<p><code>kW→MW</code> means <code>linear</code> with divisor 1000, <code>×1000</code> the factor 1000, and
+<code>inf→absent</code> the <code>absent</code> converter for <code>"inf"</code> with <code>reverse_default: "inf"</code>.</p>
+<h3 id="payload-root">Payload root<a class="headerlink" href="#payload-root" title="Permanent link">&para;</a></h3>
 <table>
 <thead>
 <tr>
-<th>Branch name</th>
-<th>Problem</th>
+<th>EnerPlanET</th>
+<th>MEME</th>
+<th>Conversion</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code>Feature/AddLogin</code></td>
-<td>Uppercase letters</td>
+<td><code>model_id</code></td>
+<td><code>model.metadata.name</code></td>
+<td>copy</td>
 </tr>
 <tr>
-<td><code>fix/header_bug</code></td>
-<td>Underscore — use <code>fix/header-bug</code></td>
+<td><code>start_date</code>, <code>end_date</code></td>
+<td><code>model.time.start</code>, <code>model.time.end</code></td>
+<td><code>datetime</code> from <code>2006-01-02T15:04:05.000Z</code> to RFC 3339</td>
 </tr>
 <tr>
-<td><code>new-feature</code></td>
-<td>Missing type prefix</td>
+<td><code>resolution</code> (minutes)</td>
+<td><code>model.time.resolution</code></td>
+<td><code>lookup</code>: 15 <code>15min</code>, 30 <code>30min</code>, 60 <code>1H</code></td>
 </tr>
 <tr>
-<td><code>feat/new--login</code></td>
-<td>Consecutive hyphens</td>
+<td></td>
+<td><code>model.metadata.description</code></td>
+<td>constant</td>
 </tr>
 <tr>
-<td><code>fix/</code></td>
-<td>Empty description</td>
+<td></td>
+<td><code>model.carriers.electricity</code></td>
+<td>constant <code>{"name": "Electricity", "unit": "MWh"}</code></td>
+</tr>
+<tr>
+<td></td>
+<td><code>experiment.mode</code>, <code>.objective</code>, <code>.solver.name</code>, <code>.allow_unmet_demand</code></td>
+<td>constants <code>plan</code>, <code>min_cost</code>, <code>highs</code>, <code>{enabled, penalty_price 1e6}</code></td>
+</tr>
+<tr>
+<td><code>user_id</code>, <code>session_id</code>, <code>callback_url</code>, <code>country</code>, <code>lkr</code></td>
+<td>none</td>
+<td>reverse writes <code>""</code></td>
+</tr>
+<tr>
+<td><code>pypsa</code></td>
+<td>none</td>
+<td>reverse writes EnerPlanET's default line and transformer types</td>
+</tr>
+<tr>
+<td><code>custom_demand_time_series</code>, <code>parameters</code></td>
+<td>none</td>
+<td>not carried</td>
 </tr>
 </tbody>
 </table>
-<h2 id="github-auto-generated-branch-names">GitHub auto-generated branch names<a class="headerlink" href="#github-auto-generated-branch-names" title="Permanent link">&para;</a></h2>
-<p>When you create a branch directly from a GitHub issue using the <strong>"Create a branch"</strong> button, GitHub generates a name like <code>123-fix-login-bug</code>. This format has no type prefix and will fail the check.</p>
-<p>Rename it before opening a PR:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>git<span class="w"> </span>fetch<span class="w"> </span>origin
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>git<span class="w"> </span>checkout<span class="w"> </span><span class="m">123</span>-fix-login-bug
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>git<span class="w"> </span>branch<span class="w"> </span>-m<span class="w"> </span><span class="m">123</span>-fix-login-bug<span class="w"> </span>fix/123-login-bug
-</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </span>-u<span class="w"> </span>fix/123-login-bug
-</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </span>--delete<span class="w"> </span><span class="m">123</span>-fix-login-bug
-</span></code></pre></div>
-<h2 id="fixing-a-failed-branch-name-check">Fixing a failed branch name check<a class="headerlink" href="#fixing-a-failed-branch-name-check" title="Permanent link">&para;</a></h2>
-<p>The branch name check only runs when the PR is <strong>opened</strong> or <strong>reopened</strong>. To fix a failing branch name you need to rename the branch and update the PR.</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1"># Rename the branch locally</span>
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>git<span class="w"> </span>branch<span class="w"> </span>-m<span class="w"> </span>old-branch-name<span class="w"> </span>feat/correct-branch-name
-</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>
-</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="c1"># Push the renamed branch and update remote tracking</span>
-</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </span>-u<span class="w"> </span>feat/correct-branch-name
-</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>
-</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="c1"># Delete the old branch from remote</span>
-</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </span>--delete<span class="w"> </span>old-branch-name
-</span></code></pre></div>
-<p>Then update the PR base branch on GitHub if needed, or close and reopen the PR from the renamed branch.</p>
+<h3 id="connections">Connections<a class="headerlink" href="#connections" title="Permanent link">&para;</a></h3>
+<p>Each <code>topology[$i]</code> with a <code>to</code> feature becomes <code>model.transmission{${p}_$i}</code>
+with <code>$p</code> bound to <code>pipe</code>:</p>
+<table>
+<thead>
+<tr>
+<th>EnerPlanET</th>
+<th>MEME</th>
+<th>Conversion</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>pipe</code></td>
+<td>the key prefix (<code>lv_</code>, <code>mv_</code>)</td>
+<td>bind</td>
+</tr>
+<tr>
+<td><code>from.id</code>, <code>to.id</code></td>
+<td><code>from</code>, <code>to</code></td>
+<td>copy</td>
+</tr>
+<tr>
+<td><code>length</code> (km)</td>
+<td><code>distance</code></td>
+<td><code>number</code></td>
+</tr>
+<tr>
+<td></td>
+<td><code>carrier</code>, <code>bidirectional</code>, <code>capacity</code></td>
+<td>constants <code>electricity</code>, <code>true</code>, <code>{"expandable": true}</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="features">Features<a class="headerlink" href="#features" title="Permanent link">&para;</a></h3>
+<p>Each <code>topology[$i].from</code> and <code>topology[$i].to</code> becomes <code>model.nodes{$k}</code> with
+<code>$k</code> bound to the feature <code>id</code>; a transformer referenced by several
+connections is written once.</p>
+<table>
+<thead>
+<tr>
+<th>EnerPlanET</th>
+<th>MEME</th>
+<th>Conversion</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>id</code></td>
+<td>the node key</td>
+<td>bind</td>
+</tr>
+<tr>
+<td><code>geometry.coordinates[0]</code>, <code>[1]</code></td>
+<td><code>coords.lon</code>, <code>coords.lat</code></td>
+<td><code>number</code></td>
+</tr>
+<tr>
+<td><code>properties.osm_id</code></td>
+<td><code>name</code></td>
+<td>copy</td>
+</tr>
+<tr>
+<td><code>properties.demand_energy</code> (kWh/a, when &gt; 0)</td>
+<td><code>technologies{demand-$k}</code> with <code>role</code> <code>demand</code>, <code>carrier_in</code> <code>electricity</code>, <code>demand_profile</code> in MW</td>
+<td>÷ 8 760 000, rounded</td>
+</tr>
+<tr>
+<td><code>properties.rated_power</code> (kVA, transformers)</td>
+<td><code>trade{grid-$k}</code> with <code>import.limit</code> in MW, <code>import.price</code> 300, <code>export</code></td>
+<td>kW→MW</td>
+</tr>
+<tr>
+<td><code>type</code>, <code>geometry.type</code>, <code>techs</code>, <code>custom_demand_timeseries</code>, <code>properties.id</code>, <code>session_id</code>, <code>created_at</code>, <code>modified_at</code>, <code>f_class_demands</code>, <code>demand_heat</code></td>
+<td>none</td>
+<td>reverse constants: <code>Feature</code>, <code>Point</code>, <code>null</code>, <code>null</code>, the key, <code>""</code>, <code>null</code>, <code>null</code>, <code>null</code>, <code>0</code></td>
+</tr>
+<tr>
+<td><code>properties.feature_type</code>, <code>type</code>, <code>f_class</code>, <code>demand_profile</code>, <code>area</code></td>
+<td>none</td>
+<td>reverse: <code>BasePOI</code>, <code>residential</code>, <code>residential</code>, <code>residential</code>, <code>0</code> for a node without a <code>grid-*</code> trade; <code>TopologyNode</code>, <code>transformer</code>, <code>null</code> area for one with</td>
+</tr>
+</tbody>
+</table>
+<p><code>residential</code> is EnerPlanET's own fallback when a building has no usage
+class.</p>
+<h3 id="technologies">Technologies<a class="headerlink" href="#technologies" title="Permanent link">&para;</a></h3>
+<p><code>techs.&lt;key&gt;</code> of a feature becomes <code>technologies{&lt;key&gt;-$k}</code> (or
+<code>trade{...-$k}</code> for the grid tariffs), with <code>node</code> set to the feature's key.
+The shared rules, applied to every supply technology and the battery:</p>
+<table>
+<thead>
+<tr>
+<th>EnerPlanET (kW, kWh, EUR)</th>
+<th>MEME (MW, MWh, EUR)</th>
+<th>Conversion</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td></td>
+<td><code>capacity.expandable</code></td>
+<td>constant <code>true</code></td>
+</tr>
+<tr>
+<td><code>cont_energy_cap_max</code></td>
+<td><code>capacity.max</code></td>
+<td>inf→absent, kW→MW</td>
+</tr>
+<tr>
+<td><code>cont_energy_cap_min</code></td>
+<td><code>capacity.min</code></td>
+<td>kW→MW</td>
+</tr>
+<tr>
+<td><code>cont_energy_cap_max_systemwide</code></td>
+<td><code>capacity.systemwide_max</code></td>
+<td>inf→absent, kW→MW</td>
+</tr>
+<tr>
+<td><code>cont_lifetime</code></td>
+<td><code>lifetime</code></td>
+<td><code>number</code></td>
+</tr>
+<tr>
+<td><code>cost_interest_rate</code></td>
+<td><code>interest_rate</code></td>
+<td><code>number</code></td>
+</tr>
+<tr>
+<td><code>cost_energy_cap</code></td>
+<td><code>costs.monetary.investment_per_capacity</code></td>
+<td>×1000</td>
+</tr>
+<tr>
+<td><code>cost_om_annual</code></td>
+<td><code>costs.monetary.fixed_om</code></td>
+<td>×1000</td>
+</tr>
+<tr>
+<td><code>cost_om_annual_investment_fraction</code></td>
+<td><code>costs.monetary.fixed_om_fraction</code></td>
+<td>0→absent (MEME allows <code>fixed_om</code> or the fraction, not both); reverse default 0</td>
+</tr>
+<tr>
+<td><code>cost_om_prod</code></td>
+<td><code>costs.monetary.variable_om</code></td>
+<td>×1000</td>
+</tr>
+<tr>
+<td><code>cost_om_con</code></td>
+<td><code>costs.monetary.fuel_cost</code></td>
+<td>×1000</td>
+</tr>
+<tr>
+<td><code>cost_purchase</code></td>
+<td><code>costs.monetary.purchase</code></td>
+<td><code>number</code></td>
+</tr>
+</tbody>
+</table>
+<p>Per technology:</p>
+<table>
+<thead>
+<tr>
+<th>Key</th>
+<th>MEME</th>
+<th>Specific fields</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>pv_supply</code></td>
+<td>supply, <code>performance</code> physics <code>pv</code></td>
+<td><code>tilt</code>, <code>azimuth</code>, <code>losses</code>→<code>params.tilt</code>, <code>.azimuth</code>, <code>.loss</code>; <code>cont_energy_eff</code>→<code>efficiency</code>; <code>cont_parasitic_eff</code>→<code>native.calliope.flow_out_parasitic_eff</code></td>
+</tr>
+<tr>
+<td><code>battery_storage</code></td>
+<td>storage</td>
+<td><code>cont_energy_eff</code>→<code>storage.charge_eff</code> and <code>.discharge_eff</code>; <code>cont_storage_cap_max</code>/<code>_min</code>→<code>storage.energy_capacity.max</code>/<code>.min</code> (kWh→MWh, inf→absent); <code>cont_storage_loss</code>→<code>self_discharge</code>; <code>cont_storage_initial</code>→<code>initial_soc</code>; <code>cont_storage_discharge_depth</code>→<code>depth_of_discharge</code>; <code>cost_storage_cap</code>→<code>investment_per_energy_capacity</code> (×1000); <code>energy_capacity.expandable</code> <code>true</code></td>
+</tr>
+<tr>
+<td><code>wind_onshore</code></td>
+<td>supply, <code>performance</code> physics <code>wind</code></td>
+<td><code>hub_height</code>, <code>rotor_diameter</code>, <code>nominal_power</code>, <code>turbine_id</code>→<code>params.*</code></td>
+</tr>
+<tr>
+<td><code>biomass_supply</code>, <code>geothermal_supply</code>, <code>water_supply</code></td>
+<td>supply</td>
+<td>shared rules and <code>efficiency</code> only</td>
+</tr>
+<tr>
+<td><code>households_supply</code>, <code>non_households_supply</code></td>
+<td><code>trade{households-$k}</code>, <code>trade{non_households-$k}</code></td>
+<td><code>cost_om_con</code>→<code>import.price</code> (×1000); <code>cont_energy_cap_max</code>→<code>import.limit</code> (inf→absent, kW→MW)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="not-carried">Not carried<a class="headerlink" href="#not-carried" title="Permanent link">&para;</a></h3>
+<p>PySAM inputs of <code>pv_supply</code> (<code>system_capacity</code>, <code>module_type</code>,
+<code>inverter_type</code>, <code>optimize_orientation</code>, <code>inv_eff</code>, <code>dc_ac_ratio</code>) and the
+process parameters of biomass and geothermal exist to generate resource
+profiles outside the optimiser; MEME has no PySAM, so they have no
+counterpart. <code>cont_resource_unit</code>, <code>cont_energy_cap_scale</code>, <code>cont_export_cap</code>,
+<code>cost_export</code> and <code>cont_resource_eff</code> likewise have none. A PV or wind
+profile must therefore be supplied to MEME separately, as a <code>precomputed</code>
+series or through TentaCron's resolvents.</p>
+<h2 id="meme-target-compatibility">MEME target compatibility<a class="headerlink" href="#meme-target-compatibility" title="Permanent link">&para;</a></h2>
+<p>The produced job passes MEME's decoding and model validation. The per-target
+gates then apply:</p>
+<table>
+<thead>
+<tr>
+<th>Target</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>calliope</code></td>
+<td>accepted; warnings that <code>highs</code> is replaced by CBC and that the unmet-demand penalty is approximated by <code>bigM</code></td>
+</tr>
+<tr>
+<td><code>pypsa</code></td>
+<td>rejected: PyPSA does not support <code>allow_unmet_demand</code>; remove that constant rule for this target</td>
+</tr>
+<tr>
+<td><code>adopt-net0</code></td>
+<td>rejected: AdOpT-NET0 has no transmission mapping in MEME yet</td>
+</tr>
+</tbody>
+</table>
+<h2 id="the-reverse-direction">The reverse direction<a class="headerlink" href="#the-reverse-direction" title="Permanent link">&para;</a></h2>
+<p><code>t1k -reverse</code> rebuilds the calculation payload from a job. Everything the
+tables above mark as a copy or conversion comes back exactly (numbers to
+their digits, kWh rounded to whole numbers); the reverse constants restore
+the payload's required keys with the placeholders listed. Two limits:</p>
+<ul>
+<li>A building without a connection has a node and a demand but no
+  transmission arc, so the reverse has nowhere to place it in <code>topology</code>; it
+  is not restored.</li>
+<li><code>user_id</code>, <code>session_id</code>, <code>callback_url</code>, <code>country</code> and <code>lkr</code> are not in a
+  MEME job; the reverse writes empty strings, and the caller must set them
+  (the simulation engine's schema requires a non-empty <code>country</code>).</li>
+</ul>
+<p><code>examples/</code> holds the payload, the job and the reverse output; <code>testdata/</code>
+pins both directions, and the tests check that converting the reverse output
+forward again reproduces the job apart from the standalone building.</p>
+<h2 id="adapting-the-mapping">Adapting the mapping<a class="headerlink" href="#adapting-the-mapping" title="Permanent link">&para;</a></h2>
+<p><code>t1k -print-config &gt; my-mapping.json</code> writes the embedded mapping out.
+Typical edits: change the tariff constants, drop the unmet-demand rule for
+PyPSA, replace the constant demand by a series (<code>demand_profile</code> naming a
+<code>model.timeseries</code> entry), or add rules for further building properties.
+<code>t1k -config my-mapping.json</code> runs the edited copy; the
+<a href="../../configuration/overview/">configuration reference</a> describes every
+construct.</p>
 
 
 
@@ -1183,7 +1428,7 @@
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="September 27, 2026 18:57:33 UTC">September 27, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="September 27, 2026 20:26:56 UTC">September 27, 2026</span>
   </span>
 
     
@@ -1193,7 +1438,7 @@
     <span class="md-icon" title="Created">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M14.47 15.08 11 13V7h1.5v5.25l3.08 1.83c-.41.28-.79.62-1.11 1m-1.39 4.84c-.36.05-.71.08-1.08.08-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8c0 .37-.03.72-.08 1.08.69.1 1.33.32 1.92.64.1-.56.16-1.13.16-1.72 0-5.5-4.5-10-10-10S2 6.5 2 12s4.47 10 10 10c.59 0 1.16-.06 1.72-.16-.32-.59-.54-1.23-.64-1.92M18 15v3h-3v2h3v3h2v-3h3v-2h-3v-3z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="September 27, 2026 18:57:33 UTC">September 27, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="September 27, 2026 20:26:56 UTC">September 27, 2026</span>
   </span>
 
     
@@ -1228,7 +1473,7 @@
       <nav class="md-footer__inner md-grid" aria-label="Footer" >
         
           
-          <a href="../../development/testing/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Testing">
+          <a href="../../configuration/reverse/" class="md-footer__link md-footer__link--prev" aria-label="Previous: The reverse direction">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
@@ -1238,20 +1483,20 @@
                 Previous
               </span>
               <div class="md-ellipsis">
-                Testing
+                The reverse direction
               </div>
             </div>
           </a>
         
         
           
-          <a href="../commit-conventions/" class="md-footer__link md-footer__link--next" aria-label="Next: Commit Conventions">
+          <a href="../../development/architecture/" class="md-footer__link md-footer__link--next" aria-label="Next: Architecture">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                Commit Conventions
+                Architecture
               </div>
             </div>
             <div class="md-footer__button md-icon">
