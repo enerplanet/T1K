@@ -1,13 +1,13 @@
 # Project information
-site_name: THD-Spatial-AI GitHub Template
-site_author: THD-Spatial-AI
+site_name: T1K
+site_author: BigGeoData & Spatial AI, Technische Hochschule Deggendorf
 site_description: >-
-  Template repository for open source projects in the THD-Spatial-AI GitHub organisation
-site_url: https://THD-Spatial-AI.github.io/gitHub-template
+  Reversible JSON-to-JSON transformation driven by a declarative mapping; ships the EnerPlanET to MEME mapping
+site_url: https://enerplanet.github.io/T1K
 
 # Repository
-repo_name: THD-Spatial/GitHub-Template
-repo_url: https://github.com/THD-Spatial-AI/gitHub-template
+repo_name: enerplanet/T1K
+repo_url: https://github.com/enerplanet/T1K
 edit_uri: edit/main/docs/
 
 # Theme configuration
@@ -116,13 +116,24 @@ markdown_extensions:
 # Page tree
 nav:
   - Home: index.md
+  - Usage:
+      - Installation: usage/installation.md
+      - Quickstart: usage/quickstart.md
+      - Command line: usage/cli.md
+      - Go package: usage/library.md
+  - Mapping configuration:
+      - Overview: configuration/overview.md
+      - Paths and variables: configuration/paths.md
+      - Rules: configuration/rules.md
+      - Converters: configuration/converters.md
+      - The reverse direction: configuration/reverse.md
+  - Mappings:
+      - EnerPlanET to MEME: mappings/enerplanet-to-meme.md
+  - Development:
+      - Architecture: development/architecture.md
+      - Testing: development/testing.md
   - Contributing:
-      - Open Source Checklist: getting-started/open-source-checklist.md
-      - Repository Naming: getting-started/repository-naming.md
-      - Documentation Setup: getting-started/documentation-setup.md
-      - Legal Sync: getting-started/legal-sync.md
       - Branch Naming: getting-started/branch-naming.md
-      - Branch Rules: getting-started/branch-rules.md
       - Commit Conventions: getting-started/commit-conventions.md
 
 # Copyright

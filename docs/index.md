@@ -1,52 +1,63 @@
-# THD-Spatial-AI GitHub Template
+# T1K
 
-Welcome to the THD-Spatial-AI GitHub Template documentation! This template helps group members create standardized, open-source ready repositories.
+T1K converts one JSON structure into another, driven by a declarative mapping
+configuration, and converts the result back again. It is a Go package with a
+command-line tool, depends only on the Go standard library, and ships with the
+mapping that turns an [EnerPlanET](https://github.com/enerplanet/enerplanet)
+calculation payload into a [MEME](https://github.com/enerplanet/meme) job.
 
-## Quick Overview
+## The core idea
 
-This template repository provides a complete starting point for open-sourcing projects under the THD-Spatial-AI organization. It includes essential files, guidelines, and a comprehensive checklist to ensure your project meets all requirements.
+A mapping is a list of rules. Each rule pairs a path in the source document
+with a path in the target document:
 
-## What's Included
+```json
+{"from": "order.total_cents", "to": "invoice.total", "convert": {"linear": {"divisor": 100}}}
+```
 
-- **Essential Documentation Templates**: LICENSE, README, CONTRIBUTING
-- **Open Source Checklist**: Step-by-step verification of requirements
-- **Git LFS Configuration**: For managing large data files
-- **MkDocs Setup**: For creating project documentation sites
-- **Repository Naming Guidelines**: Best practices for consistent naming
-- **Additional Document list**: Optional but useful files for project maintenance and community engagement
+`Transform` reads the rule left to right; `Reverse` reads it right to left and
+runs the converter backwards. Because every rule is written once and read in
+both directions, one configuration gives both transformations, and a mapping
+cannot drift between them.
 
-## Getting Started
+Paths can contain variables. A variable iterates on the side where it is
+matched and is substituted on the other side, which is how a single rule
+moves a whole collection and restructures it:
 
-1. **Use this template**: Click `Use this template -> Create a new repository` button on GitHub
+```json
+{
+  "each": {"from": "order.lines[$i]", "to": "invoice.items{line_$i}"},
+  "rules": [
+    {"from": "sku", "to": "article"},
+    {"from": "qty", "to": "quantity", "convert": "number"}
+  ]
+}
+```
 
-    ![Use this template button](assets/getting-started/creating-repo-from-template.png)
+turns an array of lines into an object keyed `line_0`, `line_1`, ... and back.
 
-2. **Name your repository**: Follow the [Repository Naming Guidelines](getting-started/repository-naming.md)
-3. **Complete checklist**: Use [Open Source Checklist](getting-started/open-source-checklist.md) to track progress
-4. **Customize files**: Update all template files for your specific project
-5. **Make it public**: Once all requirements are met, publish your repository
+## Where to go next
 
-## Key Requirements
+- [Installation](usage/installation.md) and the [Quickstart](usage/quickstart.md)
+- Using the [command line](usage/cli.md) or the [Go package](usage/library.md)
+- The mapping language: [overview](configuration/overview.md),
+  [paths](configuration/paths.md), [rules](configuration/rules.md),
+  [converters](configuration/converters.md) and
+  [the reverse direction](configuration/reverse.md)
+- The shipped mapping: [EnerPlanET to MEME](mappings/enerplanet-to-meme.md)
+- For contributors: [architecture](development/architecture.md) and
+  [testing](development/testing.md)
 
-!!! warning "Before Going Public"
-    Your repository **must** include a [LICENSE](getting-started/open-source-checklist.md#license) file before it can be made public under the THD-Spatial-AI organization.
+## Design goals
 
-### Essential Files
-
-- **LICENSE** - Required for all public repositories
-- **README.md** - Project overview and documentation
-- **CONTRIBUTING.md** - Guidelines for contributors
-- **CODE_OF_CONDUCT.md** - Community standards
-
-### Data Management
-
-- **Git LFS** - Required for repositories with large data files
-
-## Next Steps
-
-- [Open Source Checklist](getting-started/open-source-checklist.md) - Complete all requirements
-- [Repository Naming Guidelines](getting-started/repository-naming.md) - Learn about naming conventions
-
-## Support
-
-For questions or issues with this template, please [open an issue](https://github.com/THD-Spatial-AI/github-template/issues) or contact the THD-Spatial-AI group administrators.
+- **Reversible by construction.** A rule is a relation, not a procedure.
+  Converters are invertible; what cannot be inverted (a dropped field) is
+  restored from a declared default.
+- **Strict configurations.** Unknown keys, unbalanced variables, unknown
+  converters and malformed conditions are rejected when the configuration is
+  loaded, with the rule's position in the message.
+- **Faithful documents.** Numbers keep their digits unless a converter
+  touches them; the input is never modified; every conversion runs on its own
+  state, so tasks can run in parallel.
+- **No dependencies.** Standard library only, so the package is easy to vet
+  and to embed.
