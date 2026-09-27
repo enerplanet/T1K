@@ -2,7 +2,9 @@
 bin/
 dist/
 coverage.out
+# Go test binaries; the environment's .env.test is a settings file, not one.
 *.test
+!environment/.env.test
 
 # Editors and tooling
 .vscode/
