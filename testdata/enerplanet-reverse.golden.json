@@ -1,0 +1,289 @@
+{
+  "callback_url": "",
+  "country": "",
+  "end_date": "2018-01-02T00:00:00.000Z",
+  "lkr": "",
+  "model_id": "158_1790500000",
+  "pypsa": {
+    "line_type_lv": "NAYY 4x150 SE",
+    "line_type_mv": "NA2XS2Y 1x185 RM/25 12/20 kV",
+    "trafo_mv_lv_type": "0.4 MVA 20/0.4 kV",
+    "trafo_mv_lv_used": true
+  },
+  "resolution": 60,
+  "session_id": "",
+  "start_date": "2018-01-01T00:00:00.000Z",
+  "topology": [
+    {
+      "from": {
+        "custom_demand_timeseries": null,
+        "geometry": {
+          "coordinates": [
+            6.02745,
+            52.10148
+          ],
+          "type": "Point"
+        },
+        "id": "1",
+        "properties": {
+          "area": 0,
+          "created_at": null,
+          "demand_energy": 3745,
+          "demand_heat": 0,
+          "demand_profile": "residential",
+          "f_class": "residential",
+          "f_class_demands": null,
+          "feature_type": "BasePOI",
+          "id": "1",
+          "modified_at": null,
+          "osm_id": "268428040",
+          "session_id": "",
+          "type": "residential"
+        },
+        "techs": {
+          "battery_storage": {
+            "cont_energy_cap_max": 8715,
+            "cont_energy_cap_max_systemwide": "inf",
+            "cont_energy_eff": 0.97,
+            "cont_lifetime": 11,
+            "cont_storage_cap_max": 8889.3,
+            "cont_storage_initial": 0,
+            "cont_storage_loss": 0,
+            "cost_energy_cap": 1028,
+            "cost_interest_rate": 0.02,
+            "cost_om_annual": 25.19,
+            "cost_om_annual_investment_fraction": 0,
+            "cost_storage_cap": 1007.93
+          },
+          "pv_supply": {
+            "azimuth": 180,
+            "cont_energy_cap_max": 8,
+            "cont_energy_cap_max_systemwide": "inf",
+            "cont_energy_cap_min": 0,
+            "cont_energy_eff": 0.9,
+            "cont_lifetime": 25,
+            "cont_parasitic_eff": 1.0,
+            "cost_energy_cap": 575,
+            "cost_interest_rate": 0.02,
+            "cost_om_annual": 8,
+            "cost_om_annual_investment_fraction": 0,
+            "losses": 0.14,
+            "tilt": 35
+          }
+        },
+        "type": "Feature"
+      },
+      "length": 0.0182,
+      "pipe": "lv",
+      "to": {
+        "custom_demand_timeseries": null,
+        "geometry": {
+          "coordinates": [
+            6.027322234,
+            52.101322357
+          ],
+          "type": "Point"
+        },
+        "id": "trafo_2585",
+        "properties": {
+          "area": null,
+          "created_at": null,
+          "demand_energy": 0,
+          "demand_heat": 0,
+          "f_class": "transformer",
+          "f_class_demands": null,
+          "feature_type": "TopologyNode",
+          "id": "trafo_2585",
+          "modified_at": null,
+          "osm_id": "Trafo_2585",
+          "rated_power": 160,
+          "session_id": ""
+        },
+        "techs": null,
+        "type": "Feature"
+      }
+    },
+    {
+      "from": {
+        "custom_demand_timeseries": null,
+        "geometry": {
+          "coordinates": [
+            6.02801,
+            52.10171
+          ],
+          "type": "Point"
+        },
+        "id": "2",
+        "properties": {
+          "area": 0,
+          "created_at": null,
+          "demand_energy": 128000,
+          "demand_heat": 0,
+          "demand_profile": "residential",
+          "f_class": "residential",
+          "f_class_demands": null,
+          "feature_type": "BasePOI",
+          "id": "2",
+          "modified_at": null,
+          "osm_id": "268428101",
+          "session_id": "",
+          "type": "residential"
+        },
+        "techs": {
+          "non_households_supply": {
+            "cont_energy_cap_max": "inf",
+            "cost_om_con": 0.2359
+          }
+        },
+        "type": "Feature"
+      },
+      "length": 0.0621,
+      "pipe": "lv",
+      "to": {
+        "custom_demand_timeseries": null,
+        "geometry": {
+          "coordinates": [
+            6.027322234,
+            52.101322357
+          ],
+          "type": "Point"
+        },
+        "id": "trafo_2585",
+        "properties": {
+          "area": null,
+          "created_at": null,
+          "demand_energy": 0,
+          "demand_heat": 0,
+          "f_class": "transformer",
+          "f_class_demands": null,
+          "feature_type": "TopologyNode",
+          "id": "trafo_2585",
+          "modified_at": null,
+          "osm_id": "Trafo_2585",
+          "rated_power": 160,
+          "session_id": ""
+        },
+        "techs": null,
+        "type": "Feature"
+      }
+    },
+    {
+      "from": {
+        "custom_demand_timeseries": null,
+        "geometry": {
+          "coordinates": [
+            6.027322234,
+            52.101322357
+          ],
+          "type": "Point"
+        },
+        "id": "trafo_2585",
+        "properties": {
+          "area": null,
+          "created_at": null,
+          "demand_energy": 0,
+          "demand_heat": 0,
+          "f_class": "transformer",
+          "f_class_demands": null,
+          "feature_type": "TopologyNode",
+          "id": "trafo_2585",
+          "modified_at": null,
+          "osm_id": "Trafo_2585",
+          "rated_power": 160,
+          "session_id": ""
+        },
+        "techs": null,
+        "type": "Feature"
+      },
+      "length": 0.412,
+      "pipe": "mv",
+      "to": {
+        "custom_demand_timeseries": null,
+        "geometry": {
+          "coordinates": [
+            6.03102,
+            52.10355
+          ],
+          "type": "Point"
+        },
+        "id": "trafo_2590",
+        "properties": {
+          "area": null,
+          "created_at": null,
+          "demand_energy": 0,
+          "demand_heat": 0,
+          "f_class": "transformer",
+          "f_class_demands": null,
+          "feature_type": "TopologyNode",
+          "id": "trafo_2590",
+          "modified_at": null,
+          "osm_id": "Trafo_2590",
+          "rated_power": 250,
+          "session_id": ""
+        },
+        "techs": null,
+        "type": "Feature"
+      }
+    },
+    {
+      "from": {
+        "custom_demand_timeseries": null,
+        "geometry": {
+          "coordinates": [
+            6.03088,
+            52.10341
+          ],
+          "type": "Point"
+        },
+        "id": "3",
+        "properties": {
+          "area": 0,
+          "created_at": null,
+          "demand_energy": 21000,
+          "demand_heat": 0,
+          "demand_profile": "residential",
+          "f_class": "residential",
+          "f_class_demands": null,
+          "feature_type": "BasePOI",
+          "id": "3",
+          "modified_at": null,
+          "osm_id": "268429377",
+          "session_id": "",
+          "type": "residential"
+        },
+        "techs": null,
+        "type": "Feature"
+      },
+      "length": 0.0247,
+      "pipe": "lv",
+      "to": {
+        "custom_demand_timeseries": null,
+        "geometry": {
+          "coordinates": [
+            6.03102,
+            52.10355
+          ],
+          "type": "Point"
+        },
+        "id": "trafo_2590",
+        "properties": {
+          "area": null,
+          "created_at": null,
+          "demand_energy": 0,
+          "demand_heat": 0,
+          "f_class": "transformer",
+          "f_class_demands": null,
+          "feature_type": "TopologyNode",
+          "id": "trafo_2590",
+          "modified_at": null,
+          "osm_id": "Trafo_2590",
+          "rated_power": 250,
+          "session_id": ""
+        },
+        "techs": null,
+        "type": "Feature"
+      }
+    }
+  ],
+  "user_id": ""
+}

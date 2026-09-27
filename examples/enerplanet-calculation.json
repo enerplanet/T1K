@@ -1,0 +1,266 @@
+{
+  "user_id": "c1d2e3f4-user",
+  "model_id": "158_1790500000",
+  "session_id": "158790500000",
+  "country": "NL",
+  "lkr": "Apeldoorn",
+  "callback_url": "http://backend:8000/api/v1/calculation/callback/158",
+  "start_date": "2018-01-01T00:00:00.000Z",
+  "end_date": "2018-01-02T00:00:00.000Z",
+  "resolution": 60,
+  "topology": [
+    {
+      "from": {
+        "type": "Feature",
+        "geometry": {"type": "Point", "coordinates": [6.02745, 52.10148]},
+        "id": "1",
+        "properties": {
+          "id": "1",
+          "feature_type": "BasePOI",
+          "type": "house",
+          "f_class": "house",
+          "f_class_demands": [{"demand_energy": 3745, "profile": "house"}],
+          "osm_id": "268428040",
+          "area": 72.53,
+          "demand_profile": "house",
+          "demand_energy": 3745,
+          "demand_heat": 5803,
+          "created_at": null,
+          "modified_at": null,
+          "session_id": "158790500000"
+        },
+        "techs": {
+          "pv_supply": {
+            "cont_energy_cap_max": 8,
+            "cont_energy_cap_max_systemwide": "inf",
+            "cont_energy_cap_min": 0,
+            "cont_energy_eff": 0.9,
+            "cont_lifetime": 25,
+            "cont_parasitic_eff": 1.0,
+            "cost_energy_cap": 575,
+            "cost_interest_rate": 0.02,
+            "cost_om_annual": 8.0,
+            "system_capacity": 8,
+            "tilt": 35,
+            "azimuth": 180,
+            "losses": 0.14
+          },
+          "battery_storage": {
+            "cont_energy_cap_max": 8715,
+            "cont_storage_cap_max": 8889.3,
+            "cont_storage_loss": 0,
+            "cont_storage_initial": 0,
+            "cont_energy_eff": 0.97,
+            "cont_lifetime": 11,
+            "cost_energy_cap": 1028,
+            "cost_storage_cap": 1007.93,
+            "cost_om_annual": 25.19,
+            "cost_om_annual_investment_fraction": 0,
+            "cost_interest_rate": 0.02
+          }
+        },
+        "custom_demand_timeseries": null
+      },
+      "to": {
+        "type": "Feature",
+        "geometry": {"type": "Point", "coordinates": [6.027322234, 52.101322357]},
+        "id": "trafo_2585",
+        "properties": {
+          "id": "trafo_2585",
+          "osm_id": "Trafo_2585",
+          "feature_type": "TopologyNode",
+          "f_class": "transformer",
+          "f_class_demands": null,
+          "area": null,
+          "demand_energy": 0,
+          "demand_heat": 0,
+          "created_at": null,
+          "modified_at": null,
+          "rated_power": 160,
+          "session_id": "158790500000"
+        },
+        "techs": null,
+        "custom_demand_timeseries": null
+      },
+      "length": 0.0182,
+      "pipe": "lv"
+    },
+    {
+      "from": {
+        "type": "Feature",
+        "geometry": {"type": "Point", "coordinates": [6.02801, 52.10171]},
+        "id": "2",
+        "properties": {
+          "id": "2",
+          "feature_type": "BasePOI",
+          "type": "supermarket",
+          "f_class": "supermarket",
+          "f_class_demands": [{"demand_energy": 128000, "profile": "supermarket"}],
+          "osm_id": "268428101",
+          "area": 320.0,
+          "demand_profile": "supermarket",
+          "demand_energy": 128000,
+          "demand_heat": 0,
+          "created_at": null,
+          "modified_at": null,
+          "session_id": "158790500000"
+        },
+        "techs": {
+          "non_households_supply": {
+            "cont_energy_cap_max": "inf",
+            "cont_resource_eff": 1.0,
+            "cost_interest_rate": 0.02,
+            "cost_om_con": 0.2359
+          }
+        },
+        "custom_demand_timeseries": null
+      },
+      "to": {
+        "type": "Feature",
+        "geometry": {"type": "Point", "coordinates": [6.027322234, 52.101322357]},
+        "id": "trafo_2585",
+        "properties": {
+          "id": "trafo_2585",
+          "osm_id": "Trafo_2585",
+          "feature_type": "TopologyNode",
+          "f_class": "transformer",
+          "f_class_demands": null,
+          "area": null,
+          "demand_energy": 0,
+          "demand_heat": 0,
+          "created_at": null,
+          "modified_at": null,
+          "rated_power": 160,
+          "session_id": "158790500000"
+        },
+        "techs": null,
+        "custom_demand_timeseries": null
+      },
+      "length": 0.0621,
+      "pipe": "lv"
+    },
+    {
+      "from": {
+        "type": "Feature",
+        "geometry": {"type": "Point", "coordinates": [6.027322234, 52.101322357]},
+        "id": "trafo_2585",
+        "properties": {
+          "id": "trafo_2585",
+          "osm_id": "Trafo_2585",
+          "feature_type": "TopologyNode",
+          "f_class": "transformer",
+          "f_class_demands": null,
+          "area": null,
+          "demand_energy": 0,
+          "demand_heat": 0,
+          "created_at": null,
+          "modified_at": null,
+          "rated_power": 160,
+          "session_id": "158790500000"
+        },
+        "techs": null,
+        "custom_demand_timeseries": null
+      },
+      "to": {
+        "type": "Feature",
+        "geometry": {"type": "Point", "coordinates": [6.03102, 52.10355]},
+        "id": "trafo_2590",
+        "properties": {
+          "id": "trafo_2590",
+          "osm_id": "Trafo_2590",
+          "feature_type": "TopologyNode",
+          "f_class": "transformer",
+          "f_class_demands": null,
+          "area": null,
+          "demand_energy": 0,
+          "demand_heat": 0,
+          "created_at": null,
+          "modified_at": null,
+          "rated_power": 250,
+          "session_id": "158790500000"
+        },
+        "techs": null,
+        "custom_demand_timeseries": null
+      },
+      "length": 0.412,
+      "pipe": "mv"
+    },
+    {
+      "from": {
+        "type": "Feature",
+        "geometry": {"type": "Point", "coordinates": [6.03088, 52.10341]},
+        "id": "3",
+        "properties": {
+          "id": "3",
+          "feature_type": "BasePOI",
+          "type": "apartments",
+          "f_class": "apartments",
+          "f_class_demands": [{"demand_energy": 21000, "profile": "apartments"}],
+          "osm_id": "268429377",
+          "area": 840.2,
+          "demand_profile": "apartments",
+          "demand_energy": 21000,
+          "demand_heat": 0,
+          "created_at": null,
+          "modified_at": null,
+          "session_id": "158790500000"
+        },
+        "techs": null,
+        "custom_demand_timeseries": null
+      },
+      "to": {
+        "type": "Feature",
+        "geometry": {"type": "Point", "coordinates": [6.03102, 52.10355]},
+        "id": "trafo_2590",
+        "properties": {
+          "id": "trafo_2590",
+          "osm_id": "Trafo_2590",
+          "feature_type": "TopologyNode",
+          "f_class": "transformer",
+          "f_class_demands": null,
+          "area": null,
+          "demand_energy": 0,
+          "demand_heat": 0,
+          "created_at": null,
+          "modified_at": null,
+          "rated_power": 250,
+          "session_id": "158790500000"
+        },
+        "techs": null,
+        "custom_demand_timeseries": null
+      },
+      "length": 0.0247,
+      "pipe": "lv"
+    },
+    {
+      "from": {
+        "type": "Feature",
+        "geometry": {"type": "Point", "coordinates": [6.04011, 52.09877]},
+        "id": "4",
+        "properties": {
+          "id": "4",
+          "feature_type": "BasePOI",
+          "type": "farm",
+          "f_class": "farm",
+          "f_class_demands": [{"demand_energy": 9600, "profile": "farm"}],
+          "osm_id": "268431250",
+          "area": 120.0,
+          "demand_profile": "farm",
+          "demand_energy": 9600,
+          "demand_heat": 0,
+          "created_at": null,
+          "modified_at": null,
+          "session_id": "158790500000"
+        },
+        "techs": null,
+        "custom_demand_timeseries": null
+      }
+    }
+  ],
+  "pypsa": {
+    "trafo_mv_lv_used": true,
+    "trafo_mv_lv_type": "0.16 MVA 20/0.4 kV",
+    "line_type_mv": "NA2XS2Y 1x185 RM/25 12/20 kV",
+    "line_type_lv": "NAYY 4x150 SE"
+  }
+}

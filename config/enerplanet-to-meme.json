@@ -1,0 +1,189 @@
+{
+  "name": "enerplanet-to-meme",
+  "version": "1.0.0",
+  "description": "Converts the calculation payload EnerPlanET sends to its simulation webservice into a MEME job (POST /simulate body). The reverse direction rebuilds the calculation payload from a MEME job; fields MEME cannot carry are restored from the defaults noted on each rule.",
+  "definitions": {
+    "tech_capacity": [
+      {"to": "capacity.expandable", "value": true},
+      {"from": "cont_energy_cap_max", "to": "capacity.max", "convert": [{"absent": {"values": ["inf"], "ignore_case": true}}, {"linear": {"divisor": 1000}}], "reverse_default": "inf", "description": "kW to MW"},
+      {"from": "cont_energy_cap_min", "to": "capacity.min", "convert": {"linear": {"divisor": 1000}}, "description": "kW to MW"},
+      {"from": "cont_energy_cap_max_systemwide", "to": "capacity.systemwide_max", "convert": [{"absent": {"values": ["inf"], "ignore_case": true}}, {"linear": {"divisor": 1000}}], "reverse_default": "inf", "description": "kW to MW; 'inf' means no bound"},
+      {"from": "cont_lifetime", "to": "lifetime", "convert": "number"},
+      {"from": "cost_interest_rate", "to": "interest_rate", "convert": "number"}
+    ],
+    "tech_costs": [
+      {"from": "cost_energy_cap", "to": "costs.monetary.investment_per_capacity", "convert": {"linear": {"factor": 1000}}, "description": "EUR/kW to EUR/MW"},
+      {"from": "cost_om_annual", "to": "costs.monetary.fixed_om", "convert": {"linear": {"factor": 1000}}, "description": "EUR/kW/a to EUR/MW/a"},
+      {"from": "cost_om_annual_investment_fraction", "to": "costs.monetary.fixed_om_fraction", "convert": [{"absent": {"values": [0]}}, "number"], "reverse_default": 0, "description": "MEME allows fixed_om or fixed_om_fraction, not both; a zero fraction is dropped"},
+      {"from": "cost_om_prod", "to": "costs.monetary.variable_om", "convert": {"linear": {"factor": 1000}}, "description": "EUR/kWh to EUR/MWh"},
+      {"from": "cost_om_con", "to": "costs.monetary.fuel_cost", "convert": {"linear": {"factor": 1000}}, "description": "EUR/kWh to EUR/MWh"},
+      {"from": "cost_purchase", "to": "costs.monetary.purchase", "convert": "number"}
+    ],
+    "supply_tech": [
+      {"to": "role", "value": "supply"},
+      {"to": "node", "template": "$k"},
+      {"to": "carrier_out", "value": "electricity"},
+      {"from": "cont_energy_eff", "to": "efficiency", "convert": "number"},
+      {"use": "tech_capacity"},
+      {"use": "tech_costs"}
+    ],
+    "grid_tariff": [
+      {"to": "node", "template": "$k"},
+      {"to": "carrier", "value": "electricity"},
+      {"from": "cost_om_con", "to": "import.price", "convert": {"linear": {"factor": 1000}}, "description": "EUR/kWh to EUR/MWh"},
+      {"from": "cont_energy_cap_max", "to": "import.limit", "convert": [{"absent": {"values": ["inf"], "ignore_case": true}}, {"linear": {"divisor": 1000}}], "reverse_default": "inf", "description": "kW to MW"}
+    ],
+    "feature": [
+      {"from": "type", "value": "Feature"},
+      {"from": "geometry.type", "value": "Point"},
+      {"from": "techs", "value": null},
+      {"from": "custom_demand_timeseries", "value": null},
+      {"from": "properties.id", "template": "$k"},
+      {"from": "properties.session_id", "value": ""},
+      {"from": "properties.created_at", "value": null},
+      {"from": "properties.modified_at", "value": null},
+      {"from": "properties.f_class_demands", "value": null},
+      {"from": "properties.demand_energy", "value": 0},
+      {"from": "properties.demand_heat", "value": 0},
+      {"from": "properties.feature_type", "value": "BasePOI", "when": {"reverse": {"path": "/model.trade{grid-$k}", "exists": false}}},
+      {"from": "properties.type", "value": "residential", "when": {"reverse": {"path": "/model.trade{grid-$k}", "exists": false}}, "description": "the usage class is not part of a MEME job; 'residential' is EnerPlanET's own fallback"},
+      {"from": "properties.f_class", "value": "residential", "when": {"reverse": {"path": "/model.trade{grid-$k}", "exists": false}}},
+      {"from": "properties.demand_profile", "value": "residential", "when": {"reverse": {"path": "/model.trade{grid-$k}", "exists": false}}},
+      {"from": "properties.area", "value": 0, "when": {"reverse": {"path": "/model.trade{grid-$k}", "exists": false}}},
+      {"from": "properties.feature_type", "value": "TopologyNode", "when": {"reverse": {"path": "/model.trade{grid-$k}", "exists": true}}},
+      {"from": "properties.f_class", "value": "transformer", "when": {"reverse": {"path": "/model.trade{grid-$k}", "exists": true}}},
+      {"from": "properties.area", "value": null, "when": {"reverse": {"path": "/model.trade{grid-$k}", "exists": true}}},
+      {"from": "geometry.coordinates[0]", "to": "coords.lon", "convert": "number"},
+      {"from": "geometry.coordinates[1]", "to": "coords.lat", "convert": "number"},
+      {"from": "properties.osm_id", "to": "name"},
+      {
+        "each": {"from": "properties", "to": "/model.technologies{demand-$k}"},
+        "when": {"forward": {"path": "demand_energy", "gt": 0}},
+        "description": "the building's annual electricity demand as a constant load",
+        "rules": [
+          {"to": "role", "value": "demand"},
+          {"to": "node", "template": "$k"},
+          {"to": "carrier_in", "value": "electricity"},
+          {"from": "demand_energy", "to": "demand_profile", "convert": {"linear": {"divisor": 8760000, "round_forward": 9, "round_reverse": 0}}, "description": "kWh/a to average MW"}
+        ]
+      },
+      {
+        "each": {"from": "properties", "to": "/model.trade{grid-$k}"},
+        "when": {"forward": [{"path": "feature_type", "equals": "TopologyNode"}, {"path": "rated_power", "gt": 0}]},
+        "description": "a transformer connects the grid: import limited by its rating, feed-in unpaid",
+        "rules": [
+          {"to": "node", "template": "$k"},
+          {"to": "carrier", "value": "electricity"},
+          {"to": "import.price", "value": 300, "description": "EUR/MWh, the transformer supply tariff of the simulation engine's Calliope template"},
+          {"to": "export", "value": {}},
+          {"from": "rated_power", "to": "import.limit", "convert": {"linear": {"divisor": 1000}}, "description": "kVA to MW"}
+        ]
+      },
+      {
+        "each": {"from": "techs.pv_supply", "to": "/model.technologies{pv_supply-$k}"},
+        "rules": [
+          {"use": "supply_tech"},
+          {"to": "performance.type", "value": "physics"},
+          {"to": "performance.model", "value": "pv"},
+          {"from": "tilt", "to": "performance.params.tilt", "convert": "number"},
+          {"from": "azimuth", "to": "performance.params.azimuth", "convert": "number"},
+          {"from": "losses", "to": "performance.params.loss", "convert": "number"},
+          {"from": "cont_parasitic_eff", "to": "native.calliope.flow_out_parasitic_eff", "convert": "number"}
+        ]
+      },
+      {
+        "each": {"from": "techs.battery_storage", "to": "/model.technologies{battery_storage-$k}"},
+        "rules": [
+          {"to": "role", "value": "storage"},
+          {"to": "node", "template": "$k"},
+          {"to": "carrier_in", "value": "electricity"},
+          {"to": "carrier_out", "value": "electricity"},
+          {"use": "tech_capacity"},
+          {"use": "tech_costs"},
+          {"to": "storage.energy_capacity.expandable", "value": true},
+          {"from": "cont_energy_eff", "to": "storage.charge_eff", "convert": "number"},
+          {"from": "cont_energy_eff", "to": "storage.discharge_eff", "convert": "number"},
+          {"from": "cont_storage_cap_max", "to": "storage.energy_capacity.max", "convert": [{"absent": {"values": ["inf"], "ignore_case": true}}, {"linear": {"divisor": 1000}}], "reverse_default": "inf", "description": "kWh to MWh"},
+          {"from": "cont_storage_cap_min", "to": "storage.energy_capacity.min", "convert": {"linear": {"divisor": 1000}}, "description": "kWh to MWh"},
+          {"from": "cont_storage_loss", "to": "storage.self_discharge", "convert": "number"},
+          {"from": "cont_storage_initial", "to": "storage.initial_soc", "convert": "number"},
+          {"from": "cont_storage_discharge_depth", "to": "storage.depth_of_discharge", "convert": "number"},
+          {"from": "cost_storage_cap", "to": "costs.monetary.investment_per_energy_capacity", "convert": {"linear": {"factor": 1000}}, "description": "EUR/kWh to EUR/MWh"}
+        ]
+      },
+      {
+        "each": {"from": "techs.wind_onshore", "to": "/model.technologies{wind_onshore-$k}"},
+        "rules": [
+          {"use": "supply_tech"},
+          {"to": "performance.type", "value": "physics"},
+          {"to": "performance.model", "value": "wind"},
+          {"from": "hub_height", "to": "performance.params.hub_height", "convert": "number"},
+          {"from": "rotor_diameter", "to": "performance.params.rotor_diameter", "convert": "number"},
+          {"from": "nominal_power", "to": "performance.params.nominal_power", "convert": "number"},
+          {"from": "turbine_id", "to": "performance.params.turbine_id"}
+        ]
+      },
+      {
+        "each": {"from": "techs.biomass_supply", "to": "/model.technologies{biomass_supply-$k}"},
+        "rules": [{"use": "supply_tech"}]
+      },
+      {
+        "each": {"from": "techs.geothermal_supply", "to": "/model.technologies{geothermal_supply-$k}"},
+        "rules": [{"use": "supply_tech"}]
+      },
+      {
+        "each": {"from": "techs.water_supply", "to": "/model.technologies{water_supply-$k}"},
+        "rules": [{"use": "supply_tech"}]
+      },
+      {
+        "each": {"from": "techs.households_supply", "to": "/model.trade{households-$k}"},
+        "rules": [{"use": "grid_tariff"}]
+      },
+      {
+        "each": {"from": "techs.non_households_supply", "to": "/model.trade{non_households-$k}"},
+        "rules": [{"use": "grid_tariff"}]
+      }
+    ]
+  },
+  "rules": [
+    {"from": "model_id", "to": "model.metadata.name"},
+    {"to": "model.metadata.description", "value": "EnerPlanET calculation payload converted by T1K"},
+    {"from": "start_date", "to": "model.time.start", "convert": {"datetime": {"from": "2006-01-02T15:04:05.000Z", "to": "RFC3339"}}},
+    {"from": "end_date", "to": "model.time.end", "convert": {"datetime": {"from": "2006-01-02T15:04:05.000Z", "to": "RFC3339"}}},
+    {"from": "resolution", "to": "model.time.resolution", "convert": {"lookup": {"pairs": [[15, "15min"], [30, "30min"], [60, "1H"]]}}, "description": "minutes to a pandas frequency"},
+    {"to": "model.carriers.electricity", "value": {"name": "Electricity", "unit": "MWh"}},
+    {"to": "experiment.mode", "value": "plan"},
+    {"to": "experiment.objective", "value": "min_cost"},
+    {"to": "experiment.solver.name", "value": "highs"},
+    {"to": "experiment.allow_unmet_demand", "value": {"enabled": true, "penalty_price": 1000000}, "description": "mirrors ensure_feasibility with bigM 1e6 in the Calliope template; PyPSA rejects unmet demand, remove this rule for that target"},
+    {"from": "user_id", "value": "", "description": "not part of a MEME job; set by the caller"},
+    {"from": "session_id", "value": ""},
+    {"from": "callback_url", "value": ""},
+    {"from": "country", "value": ""},
+    {"from": "lkr", "value": ""},
+    {"from": "pypsa", "value": {"trafo_mv_lv_used": true, "trafo_mv_lv_type": "0.4 MVA 20/0.4 kV", "line_type_mv": "NA2XS2Y 1x185 RM/25 12/20 kV", "line_type_lv": "NAYY 4x150 SE"}, "description": "EnerPlanET's default power-flow settings; MEME has no power flow"},
+    {
+      "each": {"from": "topology[$i]", "to": "model.transmission{${p}_$i}", "bind": {"$p": "pipe"}},
+      "when": {"forward": {"path": "to", "exists": true}},
+      "description": "every connection becomes a transmission arc keyed by pipe kind and position, e.g. lv_0",
+      "rules": [
+        {"to": "carrier", "value": "electricity"},
+        {"to": "bidirectional", "value": true},
+        {"to": "capacity", "value": {"expandable": true}},
+        {"from": "from.id", "to": "from"},
+        {"from": "to.id", "to": "to"},
+        {"from": "length", "to": "distance", "convert": "number", "description": "km"}
+      ]
+    },
+    {
+      "each": {"from": "topology[$i].from", "to": "model.nodes{$k}", "bind": {"$k": "id"}},
+      "description": "every feature at the start of a connection is a node keyed by its id",
+      "rules": [{"use": "feature"}]
+    },
+    {
+      "each": {"from": "topology[$i].to", "to": "model.nodes{$k}", "bind": {"$k": "id"}},
+      "description": "every feature at the end of a connection is a node keyed by its id",
+      "rules": [{"use": "feature"}]
+    }
+  ]
+}
