@@ -24,4 +24,8 @@
 // Each conversion runs on its own state, so tasks may be used from several
 // goroutines at once. The t1k command in cmd/t1k exposes the same
 // functionality on the command line.
+//
+// This package is the public surface; the mapping language itself lives in
+// the internal packages jsonpath (paths), convert (converters) and mapping
+// (rule compilation and evaluation), on top of jsondoc (the document model).
 package t1k

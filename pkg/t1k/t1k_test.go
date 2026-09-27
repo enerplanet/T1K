@@ -9,7 +9,18 @@ import (
 	"path/filepath"
 	"sync"
 	"testing"
+
+	"github.com/enerplanet/T1K/internal/jsondoc"
 )
+
+func mustDecode(t *testing.T, s string) any {
+	t.Helper()
+	v, err := jsondoc.Decode([]byte(s))
+	if err != nil {
+		t.Fatalf("decode %s: %v", s, err)
+	}
+	return v
+}
 
 var update = flag.Bool("update", false, "rewrite the golden files in testdata from the current output")
 
@@ -78,7 +89,7 @@ func TestDefaultMappingRoundTrip(t *testing.T) {
 	model := want["model"].(map[string]any)
 	delete(model["nodes"].(map[string]any), "4")
 	delete(model["technologies"].(map[string]any), "demand-4")
-	if got := mustDecode(t, string(again)); !equalJSON(got, want) {
+	if got := mustDecode(t, string(again)); !jsondoc.Equal(got, want) {
 		t.Errorf("second forward pass differs beyond the standalone building:\n%s", again)
 	}
 	back2, err := task.Reverse(again)

@@ -1,24 +1,35 @@
-package t1k
+package mapping
 
 import (
 	"errors"
 	"strings"
 	"testing"
+
+	"github.com/enerplanet/T1K/internal/jsondoc"
 )
+
+func mustDecode(t *testing.T, s string) any {
+	t.Helper()
+	v, err := jsondoc.Decode([]byte(s))
+	if err != nil {
+		t.Fatalf("decode %s: %v", s, err)
+	}
+	return v
+}
 
 // runRules applies a configuration (given only its rules JSON) to a document
 // and returns the compact JSON result.
-func runRules(t *testing.T, rules, input string, dir direction) (string, error) {
+func runRules(t *testing.T, rules, input string, dir Direction) (string, error) {
 	t.Helper()
-	cfg, err := LoadConfig([]byte(`{"name": "test", "rules": ` + rules + `}`))
+	cfg, err := Compile([]byte(`{"name": "test", "rules": ` + rules + `}`))
 	if err != nil {
 		t.Fatalf("config: %v", err)
 	}
-	out, err := execute(cfg, dir, mustDecode(t, input))
+	out, err := cfg.Run(dir, mustDecode(t, input))
 	if err != nil {
 		return "", err
 	}
-	data, err := encodeJSON(out, "", "")
+	data, err := jsondoc.Encode(out, "", "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -27,7 +38,7 @@ func runRules(t *testing.T, rules, input string, dir direction) (string, error) 
 
 func canon(t *testing.T, s string) string {
 	t.Helper()
-	data, err := encodeJSON(mustDecode(t, s), "", "")
+	data, err := jsondoc.Encode(mustDecode(t, s), "", "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -47,7 +58,7 @@ func runEngineCases(t *testing.T, cases []engineCase) {
 	t.Helper()
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			fwd, err := runRules(t, tc.rules, tc.input, forward)
+			fwd, err := runRules(t, tc.rules, tc.input, Forward)
 			if err != nil {
 				t.Fatalf("forward: %v", err)
 			}
@@ -61,7 +72,7 @@ func runEngineCases(t *testing.T, cases []engineCase) {
 			if tc.revIn != "" {
 				revIn = tc.revIn
 			}
-			rev, err := runRules(t, tc.rules, revIn, reverse)
+			rev, err := runRules(t, tc.rules, revIn, Reverse)
 			if err != nil {
 				t.Fatalf("reverse: %v", err)
 			}
@@ -342,15 +353,15 @@ func TestEngineErrors(t *testing.T) {
 		name  string
 		rules string
 		input string
-		dir   direction
+		dir   Direction
 		want  string
 	}{
-		{"converter failure names the rule", `[{"from": "a", "to": "b", "convert": "number"}]`, `{"a": true}`, forward, "rules[0] (forward): a: number:"},
-		{"converter failure in reverse", `[{"from": "a", "to": "b", "convert": "number"}]`, `{"b": "x"}`, reverse, "rules[0] (reverse): b: number:"},
-		{"bind path missing", `[{"each": {"from": "l[$i]", "to": "m{$k}", "bind": {"$k": "id"}}}]`, `{"l": [{"x": 1}]}`, forward, `bind $k: "id" not found`},
-		{"bind value not scalar", `[{"each": {"from": "l[$i]", "to": "m{$k}", "bind": {"$k": "id"}}}]`, `{"l": [{"id": {}}]}`, forward, "bind $k"},
-		{"non-integer key for an index", `[{"from": "l[$i]", "to": "m{$i}"}]`, `{"m": {"x": 1}}`, reverse, "not an array index"},
-		{"nested rule error keeps its location", `[{"each": {"from": "l[$i]", "to": "m[$i]"}, "rules": [{"from": "a", "to": "b", "convert": "number"}]}]`, `{"l": [{"a": "z"}]}`, forward, "rules[0].rules[0] (forward)"},
+		{"converter failure names the rule", `[{"from": "a", "to": "b", "convert": "number"}]`, `{"a": true}`, Forward, "rules[0] (forward): a: number:"},
+		{"converter failure in reverse", `[{"from": "a", "to": "b", "convert": "number"}]`, `{"b": "x"}`, Reverse, "rules[0] (reverse): b: number:"},
+		{"bind path missing", `[{"each": {"from": "l[$i]", "to": "m{$k}", "bind": {"$k": "id"}}}]`, `{"l": [{"x": 1}]}`, Forward, `bind $k: "id" not found`},
+		{"bind value not scalar", `[{"each": {"from": "l[$i]", "to": "m{$k}", "bind": {"$k": "id"}}}]`, `{"l": [{"id": {}}]}`, Forward, "bind $k"},
+		{"non-integer key for an index", `[{"from": "l[$i]", "to": "m{$i}"}]`, `{"m": {"x": 1}}`, Reverse, "not an array index"},
+		{"nested rule error keeps its location", `[{"each": {"from": "l[$i]", "to": "m[$i]"}, "rules": [{"from": "a", "to": "b", "convert": "number"}]}]`, `{"l": [{"a": "z"}]}`, Forward, "rules[0].rules[0] (forward)"},
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
@@ -369,12 +380,12 @@ func TestEngineErrors(t *testing.T) {
 }
 
 func TestEngineOutputDoesNotAliasInput(t *testing.T) {
-	cfg, err := LoadConfig([]byte(`{"name": "t", "rules": [{"from": "a", "to": "b"}]}`))
+	cfg, err := Compile([]byte(`{"name": "t", "rules": [{"from": "a", "to": "b"}]}`))
 	if err != nil {
 		t.Fatal(err)
 	}
 	in := mustDecode(t, `{"a": {"list": [1]}}`)
-	out, err := execute(cfg, forward, in)
+	out, err := cfg.Run(Forward, in)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -385,7 +396,7 @@ func TestEngineOutputDoesNotAliasInput(t *testing.T) {
 }
 
 func TestDirectionString(t *testing.T) {
-	if forward.String() != "forward" || reverse.String() != "reverse" {
+	if Forward.String() != "forward" || Reverse.String() != "reverse" {
 		t.Error("direction names")
 	}
 }

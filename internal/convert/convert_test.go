@@ -1,16 +1,27 @@
-package t1k
+package convert
 
 import (
 	"encoding/json"
 	"strings"
 	"testing"
+
+	"github.com/enerplanet/T1K/internal/jsondoc"
 )
 
-func mustConv(t *testing.T, spec string) converter {
+func mustDecode(t *testing.T, s string) any {
 	t.Helper()
-	c, err := parseConvert(json.RawMessage(spec))
+	v, err := jsondoc.Decode([]byte(s))
 	if err != nil {
-		t.Fatalf("parseConvert(%s): %v", spec, err)
+		t.Fatalf("decode %s: %v", s, err)
+	}
+	return v
+}
+
+func mustConv(t *testing.T, spec string) Converter {
+	t.Helper()
+	c, err := Parse(json.RawMessage(spec))
+	if err != nil {
+		t.Fatalf("Parse(%s): %v", spec, err)
 	}
 	return c
 }
@@ -37,7 +48,7 @@ func runConvCases(t *testing.T, cases []convCase) {
 			if present {
 				in = mustDecode(t, tc.in)
 			}
-			out, outPresent, err := c.forward(in, present)
+			out, outPresent, err := c.Forward(in, present)
 			if tc.wantErr != "" {
 				if err == nil || !strings.Contains(err.Error(), tc.wantErr) {
 					t.Fatalf("forward error = %v, want %q", err, tc.wantErr)
@@ -48,7 +59,7 @@ func runConvCases(t *testing.T, cases []convCase) {
 				t.Fatalf("forward: %v", err)
 			}
 			checkValue(t, "forward", out, outPresent, tc.want)
-			back, backPresent, err := c.reverse(out, outPresent)
+			back, backPresent, err := c.Reverse(out, outPresent)
 			if err != nil {
 				t.Fatalf("reverse: %v", err)
 			}
@@ -125,7 +136,7 @@ func TestConverters(t *testing.T) {
 func TestStringReverse(t *testing.T) {
 	c := mustConv(t, `"string"`)
 	for in, want := range map[string]string{`"8"`: `8`, `"true"`: `true`, `"x"`: `"x"`, `7`: `7`} {
-		v, present, err := c.reverse(mustDecode(t, in), true)
+		v, present, err := c.Reverse(mustDecode(t, in), true)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -161,76 +172,25 @@ func TestConverterSpecErrors(t *testing.T) {
 	}
 	for _, tc := range tests {
 		t.Run(tc.spec, func(t *testing.T) {
-			_, err := parseConvert(json.RawMessage(tc.spec))
+			_, err := Parse(json.RawMessage(tc.spec))
 			if err == nil || !strings.Contains(err.Error(), tc.want) {
 				t.Fatalf("error = %v, want %q", err, tc.want)
 			}
 		})
 	}
-	if _, err := parseConvert(json.RawMessage(`{`)); err == nil {
+	if _, err := Parse(json.RawMessage(`{`)); err == nil {
 		t.Fatal("invalid JSON should fail")
 	}
 }
 
 func TestConverterNames(t *testing.T) {
-	names := converterNames()
+	names := Names()
 	want := "absent, datetime, identity, linear, lookup, number, string"
 	if got := strings.Join(names, ", "); got != want {
 		t.Fatalf("converterNames = %q, want %q", got, want)
 	}
-	_, err := parseConvert(json.RawMessage(`"missing"`))
+	_, err := Parse(json.RawMessage(`"missing"`))
 	if err == nil || !strings.Contains(err.Error(), want) {
 		t.Fatalf("unknown converter error should list the names: %v", err)
-	}
-}
-
-func TestNumberValue(t *testing.T) {
-	for in, want := range map[float64]string{1e-7: "0.0000001", 8889.3 / 1000: "8.8893", 1007.93 * 1000: "1007930", 3: "3", -2.5: "-2.5"} {
-		got, err := numberValue(in)
-		if err != nil || string(got) != want {
-			t.Errorf("numberValue(%v) = %s, %v; want %s", in, got, err, want)
-		}
-	}
-	if _, err := numberValue(1 / zero()); err == nil {
-		t.Error("infinite value should fail")
-	}
-}
-
-func zero() float64 { return 0 }
-
-func TestDecodeJSON(t *testing.T) {
-	if _, err := decodeJSON([]byte(`{"a": 1} trailing`)); err == nil {
-		t.Error("trailing data should fail")
-	}
-	if _, err := decodeJSON([]byte(`{`)); err == nil {
-		t.Error("truncated JSON should fail")
-	}
-	v, err := decodeJSON([]byte(`{"n": 12345678901234567890}`))
-	if err != nil {
-		t.Fatal(err)
-	}
-	if n := v.(map[string]any)["n"].(json.Number); n != "12345678901234567890" {
-		t.Errorf("number lost its digits: %s", n)
-	}
-	out, err := encodeJSON(map[string]any{"u": "a<b>&c"}, "", "")
-	if err != nil || string(out) != `{"u":"a<b>&c"}` {
-		t.Errorf("encodeJSON = %s, %v", out, err)
-	}
-}
-
-func TestEqualJSON(t *testing.T) {
-	a := mustDecode(t, `{"x": [1, 2.0, "s", true, null, {"y": 60}]}`)
-	b := mustDecode(t, `{"x": [1.0, 2, "s", true, null, {"y": 60.0}]}`)
-	if !equalJSON(a, b) {
-		t.Error("numerically equal documents should compare equal")
-	}
-	if equalJSON(mustDecode(t, `"60"`), mustDecode(t, `60`)) {
-		t.Error("a numeric string must not equal a number")
-	}
-	if equalJSON(mustDecode(t, `[1]`), mustDecode(t, `[1, 2]`)) || equalJSON(mustDecode(t, `{"a":1}`), mustDecode(t, `{"b":1}`)) {
-		t.Error("different containers compared equal")
-	}
-	if typeName(json.Number("1")) != "number" || typeName(nil) != "null" || typeName([]any{}) != "array" {
-		t.Error("typeName mismatch")
 	}
 }

@@ -3,50 +3,17 @@ package t1k
 import (
 	"fmt"
 
-	"github.com/enerplanet/T1K/config"
+	"github.com/enerplanet/T1K/internal/jsondoc"
+	"github.com/enerplanet/T1K/internal/mapping"
 )
-
-// defaultConfigJSON is the mapping shipped with the package: the conversion
-// of an EnerPlanET calculation payload into a MEME job, embedded from the
-// repository's config directory by the config package. It is parsed once,
-// when this package initialises, and shared by every task created without an
-// explicit configuration.
-var defaultConfigJSON = mustReadDefault()
-
-var defaultConfig = mustLoadConfig(defaultConfigJSON)
-
-func mustReadDefault() []byte {
-	data, err := config.Read(config.Default)
-	if err != nil {
-		panic(fmt.Sprintf("t1k: embedded default configuration %s is missing: %v", config.Default, err))
-	}
-	return data
-}
-
-func mustLoadConfig(data []byte) *Config {
-	cfg, err := LoadConfig(data)
-	if err != nil {
-		panic(fmt.Sprintf("t1k: embedded default configuration is invalid: %v", err))
-	}
-	return cfg
-}
-
-// DefaultConfig returns the mapping configuration embedded from
-// config/enerplanet-to-meme.json in the repository.
-func DefaultConfig() *Config { return defaultConfig }
-
-// DefaultConfigJSON returns a copy of the embedded default configuration's
-// JSON text, for example to write it out as a starting point for a custom
-// mapping.
-func DefaultConfigJSON() []byte { return append([]byte(nil), defaultConfigJSON...) }
 
 // TransformTask converts JSON documents according to a mapping configuration.
 // Transform applies the mapping as written; Reverse applies it backwards.
 //
 // A task holds no per-call state, so one task may be used concurrently; the
 // intended pattern is nevertheless one task per conversion job, which is
-// cheap (a task is a pointer to a shared, immutable configuration and two
-// formatting options).
+// cheap: a task is a pointer to a shared, immutable configuration and two
+// formatting options.
 type TransformTask struct {
 	cfg    *Config
 	prefix string
@@ -85,9 +52,9 @@ func NewTransformTask(opts ...Option) *TransformTask {
 }
 
 // Transform converts input, a JSON document in the source structure, into the
-// target structure described by the configuration.
+// target structure the configuration describes.
 func (t *TransformTask) Transform(input []byte) ([]byte, error) {
-	return t.run(forward, input)
+	return t.run(mapping.Forward, input)
 }
 
 // Reverse converts input, a JSON document in the target structure, back into
@@ -95,19 +62,21 @@ func (t *TransformTask) Transform(input []byte) ([]byte, error) {
 // values without a counterpart on the other side come from the rules'
 // reverse defaults and constants, or are left out.
 func (t *TransformTask) Reverse(input []byte) ([]byte, error) {
-	return t.run(reverse, input)
+	return t.run(mapping.Reverse, input)
 }
 
-func (t *TransformTask) run(dir direction, input []byte) ([]byte, error) {
-	in, err := decodeJSON(input)
+// run decodes the input, applies the program in the given direction and
+// encodes the result with the task's formatting.
+func (t *TransformTask) run(dir mapping.Direction, input []byte) ([]byte, error) {
+	in, err := jsondoc.Decode(input)
 	if err != nil {
 		return nil, fmt.Errorf("%w: %w", ErrInput, err)
 	}
-	out, err := execute(t.cfg, dir, in)
+	out, err := t.cfg.program.Run(dir, in)
 	if err != nil {
 		return nil, err
 	}
-	data, err := encodeJSON(out, t.prefix, t.indent)
+	data, err := jsondoc.Encode(out, t.prefix, t.indent)
 	if err != nil {
 		return nil, fmt.Errorf("t1k: encode result: %w", err)
 	}
