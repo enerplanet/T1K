@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"unicode/utf8"
 )
 
 // Template is the text between the braces of a path segment, or the template
@@ -38,6 +39,9 @@ func ParseTemplate(text string) (*Template, error) {
 // parseTemplate parses template text, naming an anonymous "*" from the
 // shared counter of the enclosing path.
 func parseTemplate(text string, anonymous *int) (*Template, error) {
+	if !utf8.ValidString(text) {
+		return nil, fmt.Errorf("key template {%s}: invalid UTF-8", text)
+	}
 	if text == "*" {
 		*anonymous++
 		return anonymousTemplate(text, "_"+strconv.Itoa(*anonymous)), nil
@@ -51,7 +55,8 @@ func parseTemplate(text string, anonymous *int) (*Template, error) {
 
 func anonymousTemplate(text, variable string) *Template {
 	t := &Template{text: text, parts: []part{{variable: variable}}, vars: []string{variable}}
-	t.compile()
+	// A single variable compiles to a pattern that cannot fail.
+	_ = t.compile()
 	return t
 }
 
@@ -98,13 +103,15 @@ func (t *Template) match(key string, b Bindings) (Bindings, bool) {
 func (t *Template) unbound(b Bindings) []string { return unbound(t.vars, b) }
 
 // compile builds the regular expression that parses keys: every variable is
-// a non-greedy group, so earlier variables take the shortest match.
-func (t *Template) compile() {
+// a non-greedy group, so earlier variables take the shortest match. The
+// pattern runs in single-line mode because an object key may contain a
+// newline, which "." would otherwise refuse to match.
+func (t *Template) compile() error {
 	if len(t.vars) == 0 {
-		return
+		return nil
 	}
 	var b strings.Builder
-	b.WriteString("^")
+	b.WriteString("(?s)^")
 	for _, p := range t.parts {
 		if p.variable != "" {
 			b.WriteString("(.+?)")
@@ -113,7 +120,12 @@ func (t *Template) compile() {
 		}
 	}
 	b.WriteString("$")
-	t.re = regexp.MustCompile(b.String())
+	re, err := regexp.Compile(b.String())
+	if err != nil {
+		return fmt.Errorf("key template {%s}: %w", t.text, err)
+	}
+	t.re = re
+	return nil
 }
 
 // templateParser accumulates the parts of a template while scanning its text.
@@ -187,7 +199,9 @@ func (tp *templateParser) finish() (*Template, error) {
 			}
 		}
 	}
-	t.compile()
+	if err := t.compile(); err != nil {
+		return nil, err
+	}
 	return t, nil
 }
 

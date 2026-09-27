@@ -8,6 +8,11 @@ with the keys concerned.
 
 ## [Unreleased]
 
+### Fixed
+
+- A key template containing invalid UTF-8 made the path parser panic; it is
+  an error now. Templates also match object keys that contain newlines.
+
 ### Changed
 
 - The library package moved from the module root to `pkg/t1k`; import it
