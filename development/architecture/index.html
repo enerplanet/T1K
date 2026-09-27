@@ -758,10 +758,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#files" class="md-nav__link">
+  <a href="#packages" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Files
+        Packages
       
     </span>
   </a>
@@ -780,10 +780,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#compiled-rules" class="md-nav__link">
+  <a href="#compilation" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Compiled rules
+        Compilation
       
     </span>
   </a>
@@ -791,10 +791,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#the-engine" class="md-nav__link">
+  <a href="#evaluation" class="md-nav__link">
     <span class="md-ellipsis">
       
-        The engine
+        Evaluation
       
     </span>
   </a>
@@ -1008,71 +1008,85 @@
 
 
 <h1 id="architecture">Architecture<a class="headerlink" href="#architecture" title="Permanent link">&para;</a></h1>
-<p>T1K is the <code>t1k</code> package under <code>pkg/t1k</code>, the <code>config</code> package that ships
-the mapping files, and the <code>cmd/t1k</code> command. It depends only on the
-standard library. <code>pkg/</code> follows the layout of the organisation's shared Go
-libraries; the Go team's own layout guide would also accept the package at
-the module root.</p>
-<h2 id="files">Files<a class="headerlink" href="#files" title="Permanent link">&para;</a></h2>
+<p>T1K is a small Go module with one public package and four internal ones,
+each with a single responsibility. It depends only on the standard library.</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>pkg/t1k              the public API: TransformTask, Config, errors
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>config               the shipped mapping files, embedded
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>cmd/t1k              the command line
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>internal/mapping     the mapping language: compiling rules, evaluating them
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>internal/jsonpath    path expressions: parsing, matching, locations
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>internal/convert     the invertible value converters
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>internal/jsondoc     the JSON document model every layer works on
+</span></code></pre></div>
+<p><code>pkg/</code> follows the layout of the organisation's shared Go libraries; the
+Go team's own layout guide would also accept the package at the module root.</p>
+<h2 id="packages">Packages<a class="headerlink" href="#packages" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
 <tr>
-<th>File</th>
+<th>Package</th>
 <th>Responsibility</th>
+<th>Depends on</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code>pkg/t1k/t1k.go</code></td>
-<td>the public API: <code>TransformTask</code>, options, <code>DefaultConfig</code>, the default mapping parsed at package initialisation</td>
+<td><code>pkg/t1k</code></td>
+<td><code>TransformTask</code> with <code>Transform</code> and <code>Reverse</code>, <code>Config</code> loading, the default configuration parsed at initialisation, the error sentinels</td>
+<td><code>mapping</code>, <code>jsondoc</code>, <code>config</code></td>
 </tr>
 <tr>
-<td><code>pkg/t1k/config.go</code></td>
-<td>parsing and strict validation of a mapping into compiled rules; <code>definitions</code>/<code>use</code> splicing; variable balance checks</td>
+<td><code>config</code></td>
+<td>the mapping files under <code>config/</code>, embedded with <code>go:embed</code> and named</td>
+<td>nothing</td>
 </tr>
 <tr>
-<td><code>pkg/t1k/path.go</code></td>
-<td>the path language: parsing, key templates, matching with bindings, concrete locations, reads and writes on the JSON tree, array compaction</td>
+<td><code>internal/mapping</code></td>
+<td><code>Compile</code> turns a configuration into a <code>Program</code> of rules; <code>Program.Run</code> applies them in a <code>Direction</code></td>
+<td><code>jsonpath</code>, <code>convert</code>, <code>jsondoc</code></td>
 </tr>
 <tr>
-<td><code>pkg/t1k/convert.go</code></td>
-<td>the converter registry and the invertible converters</td>
+<td><code>internal/jsonpath</code></td>
+<td><code>Parse</code> reads a path expression; <code>Expand</code> matches it against a document, binding variables; <code>Resolve</code>, <code>Get</code> and <code>Set</code> work with concrete locations; <code>Compact</code> removes the holes out-of-order writes leave</td>
+<td><code>jsondoc</code> (tests only)</td>
 </tr>
 <tr>
-<td><code>pkg/t1k/engine.go</code></td>
-<td>applying compiled rules to a document in either direction</td>
+<td><code>internal/convert</code></td>
+<td><code>Parse</code> builds a <code>Converter</code> from a rule's <code>convert</code>; each converter implements <code>Forward</code> and <code>Reverse</code></td>
+<td><code>jsondoc</code></td>
 </tr>
 <tr>
-<td><code>pkg/t1k/value.go</code></td>
-<td>the generic JSON tree: decoding with <code>json.Number</code>, encoding, deep copy, structural equality, number formatting</td>
+<td><code>internal/jsondoc</code></td>
+<td><code>Decode</code> and <code>Encode</code> with numbers kept as <code>json.Number</code>, <code>DeepCopy</code>, structural <code>Equal</code>, number parsing and formatting, type names for messages</td>
+<td>nothing</td>
 </tr>
 <tr>
-<td><code>cmd/t1k/main.go</code></td>
-<td>the command line: flags, files, exit codes</td>
-</tr>
-<tr>
-<td><code>config/config.go</code></td>
-<td>the <code>config</code> package: embeds every mapping in <code>config/</code> with <code>go:embed</code> and names the default one</td>
-</tr>
-<tr>
-<td><code>config/enerplanet-to-meme.json</code></td>
-<td>the default mapping</td>
+<td><code>cmd/t1k</code></td>
+<td>flags, files and exit codes around the public API</td>
+<td><code>pkg/t1k</code></td>
 </tr>
 </tbody>
 </table>
+<p>Dependencies point downwards only. The public package knows nothing about
+paths or converters; the mapping package knows nothing about files or
+formatting.</p>
 <h2 id="pipeline">Pipeline<a class="headerlink" href="#pipeline" title="Permanent link">&para;</a></h2>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>input bytes ──decodeJSON──▶ tree ──execute(cfg, direction)──▶ tree ──encodeJSON──▶ output bytes
+<div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>input bytes ──jsondoc.Decode──▶ tree ──Program.Run(direction)──▶ tree ──jsondoc.Encode──▶ output bytes
 </span></code></pre></div>
-<p><code>decodeJSON</code> keeps numbers as <code>json.Number</code>, so a value that is only moved is
-emitted with its original digits. <code>execute</code> creates a <code>run</code> per call with the
+<p><code>Decode</code> keeps numbers as <code>json.Number</code>, so a value that is only moved is
+emitted with its original digits. <code>Run</code> creates a <code>run</code> per call with the
 direction, the input tree and an output tree that starts as an empty object;
 nothing is shared between calls, which is why a task can be used
 concurrently.</p>
-<h2 id="compiled-rules">Compiled rules<a class="headerlink" href="#compiled-rules" title="Permanent link">&para;</a></h2>
-<p><code>LoadConfig</code> turns the JSON into a tree of <code>rule</code> values of three kinds:
-copy, constant and scope (<code>each</code>). Compilation resolves every path, key
-template, converter chain and condition once and checks the variable
-discipline that makes rules reversible:</p>
+<h2 id="compilation">Compilation<a class="headerlink" href="#compilation" title="Permanent link">&para;</a></h2>
+<p><code>mapping.Compile</code> parses the JSON into a tree of <code>rule</code> values of three
+kinds: copy, constant and scope (<code>each</code>). One file compiles each kind
+(<code>compile.go</code> for copy and constant rules, <code>compile_scope.go</code> for scopes and
+their <code>bind</code>, <code>condition.go</code> for <code>when</code>), reading raw JSON through the
+<code>fields</code> helper so every mistake is reported with the field's name and the
+rule's position. Compilation resolves every path, key template, converter
+chain and condition once and checks the variable discipline that makes rules
+reversible:</p>
 <ul>
 <li>a copy rule uses the same unbound variables on both sides;</li>
 <li>a constant or template uses only variables an enclosing <code>each</code> binds;</li>
@@ -1083,28 +1097,28 @@ discipline that makes rules reversible:</p>
 <p><code>use</code> splices a definition's rules at the use site and compiles them there,
 so a definition sees the variables bound where it is used; cycles are
 detected with a stack of open definitions.</p>
-<h2 id="the-engine">The engine<a class="headerlink" href="#the-engine" title="Permanent link">&para;</a></h2>
-<p>A <code>frame</code> is where the rules currently apply: the bindings, the input element
-relative paths read from, and the output <em>location</em> (a resolved list of keys
-and indices) relative paths write to. The root frame has no bindings, the
-whole input and the root location.</p>
-<p>Reading uses <code>path.expand</code>, which walks the tree with the current bindings,
-iterating unbound variables and selecting with bound ones, and returns one
-<code>match</code> per addressed value (a concrete path returns one match, present or
-not). Writing uses <code>path.resolve</code>, which substitutes every variable into a
-concrete location, and <code>setAt</code>, which creates containers on the way and grows
-arrays with <code>hole</code> markers that <code>compact</code> removes at the end.</p>
-<p>The direction only decides which side is read and which is written, which
-converter direction runs, which default and which conditions apply, and
-which of a scope's two modes runs backwards. <code>applyScope</code> enumerates the
-source elements and applies the nested rules in a new frame per element;
-<code>applyJoin</code> is the reverse of a value-keyed scope and enumerates the elements
-earlier rules created in the output instead.</p>
+<h2 id="evaluation">Evaluation<a class="headerlink" href="#evaluation" title="Permanent link">&para;</a></h2>
+<p>A <code>frame</code> is where the rules currently apply: the bindings, the input
+element relative paths read from, and the output <code>Location</code> relative paths
+write to. The root frame has no bindings, the whole input and the root
+location.</p>
+<p>The direction only decides which side of a rule is read and which is
+written, which converter direction runs, which default and which conditions
+apply, and which of a scope's two modes runs backwards (<code>run.go</code> holds the
+copy and constant rules, <code>run_scope.go</code> the scopes). Reading uses
+<code>Path.Expand</code>, which walks the tree with the current bindings, iterating
+unbound variables and selecting with bound ones, and returns one <code>Match</code> per
+addressed value; a concrete path returns one match, present or not, so a
+rule can tell absence from "nothing matched". Writing uses <code>Path.Resolve</code>,
+which substitutes every variable into a concrete location, and <code>Set</code>, which
+creates containers on the way and grows arrays with holes that <code>Compact</code>
+removes at the end.</p>
 <h2 id="converters">Converters<a class="headerlink" href="#converters" title="Permanent link">&para;</a></h2>
-<p>A converter implements <code>forward</code> and <code>reverse</code> over <code>(value, present)</code>, so it
-can turn a value into absence and back. A chain runs its steps in order
-forward and backwards in reverse. Factories parse arguments strictly and
-reject unknown ones, so a misspelt argument fails at load time.</p>
+<p>A converter implements <code>Forward</code> and <code>Reverse</code> over a <code>(value, present)</code>
+pair, so it can turn a value into absence and back. A chain runs its steps
+in order forward and backwards in reverse. Each converter lives in its own
+file; factories read their arguments through a strict reader that rejects
+unknown ones, so a misspelt argument fails at load time.</p>
 <h2 id="principles">Principles<a class="headerlink" href="#principles" title="Permanent link">&para;</a></h2>
 <ul>
 <li><strong>Bidirectional by construction:</strong> there is one rule set and one engine;
@@ -1116,6 +1130,8 @@ reject unknown ones, so a misspelt argument fails at load time.</p>
   modified, the output never aliases the input.</li>
 <li><strong>Deterministic output:</strong> sorted keys, no exponent notation, stable
   compaction.</li>
+<li><strong>Small functions:</strong> every function does one thing and says so in its
+  comment; the engine is a set of named steps, not one loop.</li>
 </ul>
 
 
@@ -1139,7 +1155,7 @@ reject unknown ones, so a misspelt argument fails at load time.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="September 27, 2026 20:34:58 UTC">September 27, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="September 27, 2026 22:29:02 UTC">September 27, 2026</span>
   </span>
 
     
