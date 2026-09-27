@@ -66,13 +66,16 @@ rebase on `main` instead of merging it into your branch.
 ### Changing the engine or the configuration format
 
 - Every construct of the mapping language is covered by a table test in
-  `pkg/t1k/engine_test.go` or `pkg/t1k/config_test.go`; add a case for new behaviour and for
-  the error message a misuse produces.
+  `internal/mapping/run_test.go` or `internal/mapping/compile_test.go`; add
+  a case for new behaviour and for the error message a misuse produces.
+  Paths and converters have their own suites next to their packages.
 - The reverse direction is part of the contract. A new converter must be
   invertible and tested in both directions; a new rule construct must define
   what `Reverse` does with it.
 - Update the configuration reference under `docs/configuration/` and the
-  changelog.
+  changelog. The [architecture page](docs/development/architecture.md)
+  describes which package owns what; keep functions single-purpose and
+  every exported identifier documented.
 
 ### Changing the default mapping
 

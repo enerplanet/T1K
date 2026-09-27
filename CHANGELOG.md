@@ -13,6 +13,11 @@ with the keys concerned.
 - The library package moved from the module root to `pkg/t1k`; import it
   as `github.com/enerplanet/T1K/pkg/t1k`. The mapping files stay in
   `config/`, now embedded through the `config` package.
+- The implementation is split into internal packages with one
+  responsibility each: `internal/jsondoc` (document model),
+  `internal/jsonpath` (path expressions), `internal/convert` (converters)
+  and `internal/mapping` (rule compilation and evaluation); `pkg/t1k` is
+  the public API only. The public API and every output are unchanged.
 
 ### Added
 
