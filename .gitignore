@@ -1,8 +1,16 @@
-# Add files and directories to ignore in Git
-# You can find some language specific templates at https://github.com/github/gitignore
+# Build output and coverage
+bin/
+dist/
+coverage.out
+*.test
 
+# Editors and tooling
+.vscode/
+.idea/
+*.swp
+
+# MkDocs site and Python virtual environments
 site/
 .venv/
-__pycache__/
 venv/
-.vscode/
+__pycache__/
