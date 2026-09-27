@@ -17,8 +17,8 @@ with the keys concerned.
 ### Added
 
 - The T1K identity: the banner on the README and the docs landing page
-  (light and dark) and the mark as the docs logo and favicon; the artwork
-  lives under `docs/assets/logos/`.
+  (light and dark), the single-colour mark as the docs logo and the accent
+  icon as favicon; the artwork lives under `docs/assets/logos/`.
 - The `t1k` package: `TransformTask` with `Transform` and `Reverse`, driven
   by a JSON mapping configuration loaded with `LoadConfig` or
   `LoadConfigFile`; the default configuration is embedded and parsed at

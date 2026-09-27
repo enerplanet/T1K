@@ -1,0 +1,20 @@
+<?xml version="1.0"?><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" width="512" height="512" role="img" aria-label="T1K mark (paper)">
+  <title>T1K mark (paper)</title>
+  <desc>The bead with the brace glyph knocked out, in one light colour, for dark grounds such as the docs header. A small-size cut of t1k-logo.svg: flat fill, thicker strokes and wider glyph spacing so it reads at 24px. Use t1k-logo.svg or the PNGs above 120px.</desc>
+  <defs>
+    <mask id="glyph" maskUnits="userSpaceOnUse" x="0" y="0" width="160" height="160">
+      <rect width="160" height="160" fill="#fff"></rect>
+      <g fill="none" stroke="#000" stroke-width="12" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M50 52 C42 52 39 56 39 62 L39 73 C39 78 37 80 34 80 C37 80 39 82 39 87 L39 98 C39 104 42 108 50 108"></path>
+      <path d="M70 66 L60 80 L70 94"></path>
+      <path d="M92 66 L102 80 L92 94"></path>
+      <path d="M112 52 C120 52 123 56 123 62 L123 73 C123 78 125 80 128 80 C125 80 123 82 123 87 L123 98 C123 104 120 108 112 108"></path>
+      </g>
+    </mask>
+  </defs>
+  <g fill="#f3f5fe" mask="url(#glyph)">
+    <path d="M78 20 C114 16 142 42 140 80 C138 118 112 142 78 140 C42 138 18 110 22 74 C26 42 50 23 78 20 Z"></path>
+    <circle cx="142" cy="44" r="6"></circle>
+    <circle cx="153" cy="58" r="3.4"></circle>
+  </g>
+</svg>

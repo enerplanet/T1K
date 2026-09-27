@@ -13,8 +13,8 @@ edit_uri: edit/main/docs/
 # Theme configuration
 theme:
   name: material
-  favicon: assets/logos/t1k-logo-light.png # the dark mark: readable on light and dark browser tabs
-  logo: assets/logos/t1k-logo.svg # the pale mark: the header is dark (indigo or black) in both schemes
+  favicon: assets/logos/t1k-icon-accent.svg # the kit's small-size fallback
+  logo: assets/logos/t1k-mark-paper.svg # single-colour light: the header is dark in both schemes
   features:
     - announce.dismiss
     - content.action.edit
