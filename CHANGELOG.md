@@ -36,3 +36,8 @@ with the keys concerned.
 - The `t1k` command line tool (`-in`, `-out`, `-config`, `-reverse`,
   `-compact`, `-print-config`, `-version`).
 - CI (lint, race tests, build, govulncheck) and the MkDocs documentation site.
+- `environment/`: a containerized development and test environment (Go
+  toolchain, the CI-pinned golangci-lint, MkDocs) with compose services for
+  tests, lint, the docs server, the `t1k` command and a shell, selected with
+  `ENV=dev|test`; the root Makefile passes `env-<target>` through to it and
+  CI runs the suite inside the image.

@@ -38,3 +38,21 @@ make test         # run the test suite
 `make lint` additionally needs [golangci-lint](https://golangci-lint.run/)
 v2, and the documentation site needs Python with
 `pip install -r docs/requirements.txt` followed by `mkdocs serve`.
+
+## In a container
+
+The `environment/` folder of the repository carries a Docker image with the
+whole toolchain (Go, golangci-lint at the version CI pins, MkDocs) and a
+compose file whose services run the same Make targets with the checkout
+bind-mounted, so nothing but Docker is needed:
+
+```bash
+make -C environment build             # one-time image build
+make -C environment test  ENV=dev     # go test ./... inside the container
+make -C environment check ENV=test    # race tests and lint, what CI runs
+make -C environment docs              # documentation on http://localhost:8000
+make -C environment cli ARGS="-in examples/enerplanet-calculation.json -compact"
+```
+
+`ENV=dev` iterates with Go's caches; `ENV=test` reproduces CI. The folder's
+README explains every service and setting.

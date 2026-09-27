@@ -8,7 +8,19 @@ make cover       # coverage summary
 ```
 
 CI runs lint, the race tests, a build, a conversion of the example in both
-directions and `govulncheck` on every push and pull request.
+directions and `govulncheck` on every push and pull request, and it builds
+the containerized environment and runs the race tests and lint inside it.
+
+## In a container
+
+`environment/` provides the same targets inside a Docker image with the
+toolchain CI uses (see the folder's README):
+
+```bash
+make -C environment build            # one-time image build
+make -C environment test  ENV=dev    # go test ./..., with Go's caches
+make -C environment check ENV=test   # race tests and lint, no test cache
+```
 
 ## Layers
 

@@ -119,6 +119,18 @@ make test        # go test ./...
 make test-race   # with the race detector, shuffled
 make lint        # go vet + golangci-lint
 make example     # convert examples/enerplanet-calculation.json both ways
+make docs        # serve the documentation (pip install -r docs/requirements.txt)
+```
+
+Or containerized: [environment/](environment/) carries a single image with
+the full toolchain (Go, golangci-lint, MkDocs), the same Make targets inside
+it, and `ENV=dev|test` selecting `environment/.env.*`:
+
+```bash
+make -C environment build             # one-time image build
+make -C environment test  ENV=dev     # the suite inside the container
+make -C environment check ENV=test    # race tests and lint, what CI runs
+make -C environment docs              # documentation on http://localhost:8000
 ```
 
 Golden files under `pkg/t1k/testdata/` pin the default mapping's output; refresh them

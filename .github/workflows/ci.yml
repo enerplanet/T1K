@@ -41,6 +41,16 @@ jobs:
           ./t1k -reverse -in meme.json -out back.json
           test -s meme.json && test -s back.json
 
+  environment:
+    name: environment
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build the environment image
+        run: make -C environment build ENV=test
+      - name: Race tests and lint inside the image
+        run: make -C environment check ENV=test
+
   vuln:
     name: vuln
     runs-on: ubuntu-latest

@@ -38,6 +38,14 @@ make lint        # go vet + golangci-lint
 make build       # bin/t1k
 ```
 
+Without a local toolchain, the same targets run in the container described
+in [environment/README.md](environment/README.md):
+
+```bash
+make -C environment build            # one-time image build
+make -C environment check ENV=test   # race tests and lint, what CI runs
+```
+
 ### Branches and commits
 
 Create a branch named `<type>/<description>` (see

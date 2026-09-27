@@ -1,0 +1,73 @@
+# Development and test environment for T1K: the package, the t1k command and
+# the documentation site.
+#
+# Per-environment settings (image tag, test target, Go flags, docs port) come
+# from an env file:
+#   docker compose --env-file environment/.env.dev  -f environment/docker-compose.yml run --rm test
+#   docker compose --env-file environment/.env.test -f environment/docker-compose.yml run --rm test
+# or via the Makefile:  make -C environment test ENV=dev   /   ENV=test
+#
+# The repo root is bind-mounted into /src so edits are picked up without a
+# rebuild; only the toolchain layer is baked into the image. The Go build and
+# module caches and the linter cache persist in named volumes.
+#
+# The project name comes from COMPOSE_PROJECT_NAME in the env files (portable
+# across compose v1 and v2, unlike the top-level `name:` key). Every service
+# shares the same image and mounts, defined once below.
+
+x-environment: &environment
+  image: ${IMAGE_TAG:-t1k-env:latest}
+  build:
+    context: ..
+    dockerfile: environment/Dockerfile
+  working_dir: /src
+  environment:
+    # Flags every go command applies (an empty value keeps Go's defaults);
+    # the test environment uses it to bypass the test cache.
+    - GOFLAGS=${GOFLAGS:-}
+  volumes:
+    - ..:/src
+    - go-build:/root/.cache/go-build
+    - go-mod:/go/pkg/mod
+    - golangci-lint:/root/.cache/golangci-lint
+
+services:
+  # One-shot: compile everything and run the Go suite. TEST_TARGET names the
+  # root Makefile target (test, or test-race for the CI settings).
+  test:
+    <<: *environment
+    command: make ${TEST_TARGET:-test}
+
+  # One-shot: go vet and golangci-lint, the version CI runs.
+  lint:
+    <<: *environment
+    command: make lint
+
+  # One-shot: build bin/t1k on the bind mount, version-stamped from git.
+  build:
+    <<: *environment
+    command: make build
+
+  # The t1k command from the working tree; arguments after the service name
+  # are its flags:  docker compose run --rm t1k -in examples/enerplanet-calculation.json
+  t1k:
+    <<: *environment
+    entrypoint: ["go", "run", "./cmd/t1k"]
+
+  # Long-running: the documentation site with live reload on
+  # http://localhost:${DOCS_PORT}.
+  docs:
+    <<: *environment
+    command: mkdocs serve --dev-addr 0.0.0.0:8000
+    ports:
+      - "${DOCS_PORT:-8000}:8000"
+
+  # Interactive shell with go, golangci-lint, mkdocs, make and git on PATH.
+  shell:
+    <<: *environment
+    command: bash
+
+volumes:
+  go-build:
+  go-mod:
+  golangci-lint:

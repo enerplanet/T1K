@@ -1,0 +1,15 @@
+# Build context for environment/Dockerfile, which copies only go.mod and
+# docs/requirements.txt; everything else reaches the container through the
+# bind mount. Keep the context small.
+.git
+.github
+.idea
+.vscode
+.venv
+venv
+__pycache__
+bin
+dist
+site
+coverage.out
+*.test
