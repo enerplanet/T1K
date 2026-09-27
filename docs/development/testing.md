@@ -5,11 +5,14 @@ make test        # go test ./...
 make test-race   # go test -race -shuffle=on ./...
 make lint        # go vet + golangci-lint (v2, configuration in .golangci.yml)
 make cover       # coverage summary
+make fuzz        # every fuzz target, FUZZTIME each (default 30s)
+make bench       # benchmarks of Transform and Reverse on the example
 ```
 
 CI runs lint, the race tests, a build, a conversion of the example in both
-directions and `govulncheck` on every push and pull request, and it builds
-the containerized environment and runs the race tests and lint inside it.
+directions, a ten-second fuzz smoke of every target and `govulncheck` on
+every push and pull request, and it builds the containerized environment and
+runs the race tests and lint inside it.
 
 ## In a container
 
@@ -26,14 +29,29 @@ make -C environment check ENV=test   # race tests and lint, no test cache
 
 | Tests | What they pin |
 |---|---|
-| `internal/jsondoc/jsondoc_test.go` | decoding with exact digits, encoding, deep copies, structural equality, number parsing and formatting, type names |
-| `internal/jsonpath/path_test.go` | parsing of every path form and its error messages, key template matching and rendering, matching with bound and unbound variables, concrete locations, reads and writes, compaction |
-| `internal/convert/convert_test.go` | every converter forward and back (each case is run both ways), argument validation, chains |
-| `internal/mapping/compile_test.go` | a valid configuration with every construct, and one case per validation error with the message it must produce |
-| `internal/mapping/run_test.go` | table cases for copy rules, constants and templates, arrays and keyed objects, `each` in iterate and join mode, nested scopes, conditions, defaults, error reporting and the no-aliasing guarantee; each case checks forward and reverse |
+| `internal/jsondoc/jsondoc_test.go` | decoding with exact digits, encoding (and what cannot be encoded), deep copies, structural equality, Go and JSON numbers, non-finite text, number formatting at the edges, type names |
+| `internal/jsonpath/path_test.go` | parsing of every path form and its error messages, the `String()` round trip, key template matching and rendering, matching with bound and unbound variables (leading zeros, out-of-range and non-integer bindings, errors inside iterations), concrete locations, reads and writes through holes and wrong containers, compaction |
+| `internal/convert/convert_test.go` | every converter forward and back (each case is run both ways), argument and type validation, absent inputs, chains and their error propagation, zone rendering, non-finite text, structural lookups |
+| `internal/mapping/compile_test.go` | a valid configuration with every construct, unusual but valid shapes, bind ordering and join detection, and one case per validation error with the message and the rule position it must produce |
+| `internal/mapping/run_test.go` | table cases for copy rules, constants and templates, arrays and keyed objects, `each` in iterate and join mode, nested scopes, every condition operator, defaults, roots and nulls, and every runtime error path with its rule position and direction; each case checks forward and reverse |
 | `pkg/t1k/t1k_test.go`, `pkg/t1k/config_test.go` | the public API, golden files for the default mapping, the round-trip property, the concurrency guarantee, error classification |
+| `pkg/t1k/mapping_test.go` | the default mapping's behaviour for every technology kind, payload edge cases (no topology, standalone buildings, zero demand and rating, resolutions, infinity spellings), values it must reject, the reverse of jobs T1K did not produce, the round trip over a payload with every kind, and degenerate inputs |
 | `config/config_test.go` | the default mapping is embedded and is JSON |
 | `cmd/t1k/main_test.go` | flags, files, standard streams, exit codes and error messages |
+
+## Fuzzing
+
+Every parser and the transformation itself have a fuzz target next to their
+tests: `FuzzParse` and `FuzzParseTemplate` in `jsonpath` (no expression
+panics, accepted ones round-trip through `String()`, rendered keys match
+their template), `FuzzParse` in `convert` (no spec panics, parsed converters
+survive representative inputs in both directions), `FuzzCompile` and
+`FuzzRun` in `mapping` (no configuration or document panics, every failure
+wraps `ErrConfig` or `ErrRule`) and `FuzzTransform` in `pkg/t1k` (the
+default mapping never panics on any input in either direction). `go test`
+runs their seed corpora; `make fuzz` explores for `FUZZTIME` per target and
+CI runs a short smoke. A crasher lands in `testdata/fuzz/` of the package;
+commit it as a regression case once fixed.
 
 ## Golden files
 

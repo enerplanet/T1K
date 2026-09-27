@@ -7,7 +7,7 @@ LDFLAGS := -X main.version=$(VERSION)
 # env-<target> shorthand below, e.g. `make env-test ENV=test`.
 
 .DEFAULT_GOAL := help
-.PHONY: build test test-race cover lint fmt golden-update example docs clean help
+.PHONY: build test test-race cover lint fmt golden-update example docs fuzz bench clean help
 
 help: ## Show this help
 	@grep -hE '^[a-zA-Z0-9_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
@@ -33,6 +33,22 @@ lint: ## Run go vet and golangci-lint
 
 fmt: ## Format the Go sources in place
 	gofmt -l -w .
+
+# Fuzz targets, one invocation each (go test accepts a single -fuzz pattern).
+FUZZTIME ?= 30s
+FUZZ_TARGETS := ./internal/jsonpath:FuzzParse ./internal/jsonpath:FuzzParseTemplate \
+                ./internal/convert:FuzzParse ./internal/mapping:FuzzCompile \
+                ./internal/mapping:FuzzRun ./pkg/t1k:FuzzTransform
+
+fuzz: ## Run every fuzz target for FUZZTIME (default 30s) each
+	@for target in $(FUZZ_TARGETS); do \
+		pkg=$${target%%:*}; name=$${target##*:}; \
+		echo "fuzz $$pkg $$name"; \
+		go test -run '^$$' -fuzz "^$$name$$" -fuzztime $(FUZZTIME) $$pkg || exit 1; \
+	done
+
+bench: ## Run the benchmarks of the public API
+	go test -run '^$$' -bench . -benchmem ./pkg/t1k
 
 golden-update: ## Rewrite the golden files after a deliberate change to the default mapping
 	go test -run 'TestDefaultMappingGolden' -update ./pkg/t1k

@@ -99,3 +99,88 @@ func TestCompileErrors(t *testing.T) {
 		})
 	}
 }
+
+func TestCompileErrorPositions(t *testing.T) {
+	// Every error names the position of the rule, including rules spliced in
+	// from a definition and nested ones.
+	tests := []struct{ name, cfg, want string }{
+		{"top-level field of the wrong type", `{"name": "x", "rules": [], "definitions": 5}`, "cannot unmarshal"},
+		{"use with unknown key", `{"name": "x", "definitions": {"d": []}, "rules": [{"use": "d", "extra": 1}]}`, `rules[0]: unknown key "extra"`},
+		{"constant with unknown key", `{"name": "x", "rules": [{"to": "a", "value": 1, "bogus": 2}]}`, `rules[0]: unknown key "bogus"`},
+		{"constant with a bad path", `{"name": "x", "rules": [{"from": "a..b", "value": 1}]}`, "rules[0]: from: path"},
+		{"constant path not a string", `{"name": "x", "rules": [{"to": 5, "value": 1}]}`, `rules[0]: "to" must be a path string`},
+		{"constant with a bad condition", `{"name": "x", "rules": [{"to": "a", "value": 1, "when": {"forward": {"path": "x"}}}]}`, "rules[0].when.forward[0]: a condition needs"},
+		{"scope with unknown key", `{"name": "x", "rules": [{"each": {"from": "a", "to": "b"}, "bogus": 1}]}`, `rules[0]: unknown key "bogus"`},
+		{"scope with bad from", `{"name": "x", "rules": [{"each": {"from": "a..", "to": "b"}}]}`, "rules[0].each: from: path"},
+		{"scope with bad to", `{"name": "x", "rules": [{"each": {"from": "a", "to": "b["}}]}`, "rules[0].each: to: path"},
+		{"reverse condition error", `{"name": "x", "rules": [{"from": "a", "to": "b", "when": {"reverse": {"path": "c"}}}]}`, "rules[0].when.reverse[0]: a condition needs"},
+		{"condition with a bad path", `{"name": "x", "rules": [{"from": "a", "to": "b", "when": {"forward": {"path": "c..d", "exists": true}}}]}`, "rules[0].when.forward[0]: path: path"},
+		{"nested rule error", `{"name": "x", "rules": [{"each": {"from": "l[$i]", "to": "m[$i]"}, "rules": [{"from": "a"}]}]}`, `rules[0].rules[0]: "to" is required`},
+		{"definition rule error", `{"name": "x", "definitions": {"d": [{"from": "a", "to": "b[$z]"}]}, "rules": [{"use": "d"}]}`, "rules[0](definitions.d)[0]"},
+		{"nested use cycle", `{"name": "x", "definitions": {"a": [{"use": "b"}], "b": [{"use": "c"}], "c": [{"use": "a"}]}, "rules": [{"use": "a"}]}`, "uses itself (via a > b > c)"},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			_, err := Compile([]byte(tc.cfg))
+			if err == nil || !errors.Is(err, ErrConfig) || !strings.Contains(err.Error(), tc.want) {
+				t.Fatalf("error = %v, want ErrConfig mentioning %q", err, tc.want)
+			}
+		})
+	}
+}
+
+func TestCompileAcceptsUnusualButValidShapes(t *testing.T) {
+	cfg := `{
+	  "$schema": "ignored",
+	  "name": "shapes",
+	  "definitions": {"d": [{"from": "x", "to": "y"}], "e": [{"use": "d"}, {"to": "n", "template": "$k"}]},
+	  "rules": [
+	    {"description": 5, "from": "a", "to": "b"},
+	    {"each": {"from": "m{$k}", "to": "o{$k}"}, "rules": [{"use": "e"}]},
+	    {"each": {"from": "l[$i]", "to": "p{$i}"}, "rules": [{"use": "d"}]},
+	    {"each": {"from": "q", "to": "r"}},
+	    {"each": {"from": "s", "to": "t"}, "rules": []},
+	    {"to": "u", "value": null},
+	    {"from": "v", "to": "w", "default": null, "reverse_default": [1, {"x": null}]},
+	    {"from": "aa[$i][$j]", "to": "bb{$j}[$i]"},
+	    {"from": "cc", "to": "dd", "when": {"forward": [], "reverse": []}}
+	  ]}`
+	p, err := Compile([]byte(cfg))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if p.RuleCount() != 9 {
+		t.Errorf("RuleCount = %d", p.RuleCount())
+	}
+	if p.rules[0].desc != "" {
+		t.Error("a non-string description is ignored")
+	}
+	// The same definition compiles per use site: once under $k, once under $i.
+	if len(p.rules[1].rules) != 2 || len(p.rules[2].rules) != 1 {
+		t.Errorf("definitions were not spliced as expected: %d, %d", len(p.rules[1].rules), len(p.rules[2].rules))
+	}
+	if !p.rules[6].def.set || p.rules[6].def.value != nil || !p.rules[6].revDef.set {
+		t.Error("null defaults must count as set")
+	}
+	if p.rules[8].when == nil || len(p.rules[8].when.forward) != 0 {
+		t.Error("empty condition lists are allowed and mean no conditions")
+	}
+}
+
+func TestCompileBindShapes(t *testing.T) {
+	p, err := Compile([]byte(`{"name": "b", "rules": [
+	  {"each": {"from": "l[$i]", "to": "m{${a}-${b}}", "bind": {"$b": "kind", "$a": "group.name"}}},
+	  {"each": {"from": "l[$i].sub", "to": "n{$k}", "bind": {"$k": "/root.id"}}}
+	]}`))
+	if err != nil {
+		t.Fatal(err)
+	}
+	// Bind entries are compiled in name order, so the model is deterministic.
+	if b := p.rules[0].each.bind; len(b) != 2 || b[0].variable != "a" || b[1].variable != "b" {
+		t.Errorf("bind order = %+v", b)
+	}
+	// $i is not in "to" and bind variables exist: both scopes join in reverse.
+	if !p.rules[0].each.join || !p.rules[1].each.join {
+		t.Error("a from variable missing from to selects join mode")
+	}
+}

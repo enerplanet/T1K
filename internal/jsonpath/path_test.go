@@ -359,3 +359,181 @@ func TestCompact(t *testing.T) {
 		t.Errorf("Compact = %s", got)
 	}
 }
+
+func TestParseMoreForms(t *testing.T) {
+	tests := []struct {
+		in    string
+		steps string
+	}{
+		{`"k"[0]`, "key(k) idx(0)"},                      // a quoted key may carry suffixes
+		{`""`, "key()"},                                  // an empty quoted key is a key
+		{`"a\\b"`, `key(a\b)`},                           // a backslash escapes itself
+		{"//a", "abs key(/a)"},                           // only the first slash is special
+		{"a{x $k}", "key(a) map(x $k)"},                  // literal text may contain spaces
+		{"a{$k$$}", "key(a) map($k$$)"},                  // "$$" is a literal dollar sign
+		{"a{${a}-${b}}", "key(a) map(${a}-${b})"},        // braced variables in a template
+		{"a[0]{$k}[$i]", "key(a) idx(0) map($k) var(i)"}, // suffixes chain
+		{"a.{$k}", "key(a) map($k)"},                     // hmm: "a." then "{$k}"? see below
+	}
+	for _, tc := range tests[:len(tests)-1] {
+		t.Run(tc.in, func(t *testing.T) {
+			p, err := Parse(tc.in)
+			if err != nil {
+				t.Fatalf("Parse(%q): %v", tc.in, err)
+			}
+			if got := stepsString(p); got != tc.steps {
+				t.Errorf("steps = %q, want %q", got, tc.steps)
+			}
+		})
+	}
+	// A segment consisting of a suffix alone is only allowed at the start.
+	if _, err := Parse("a.{$k}"); err == nil || !strings.Contains(err.Error(), "only allowed at the start") {
+		t.Errorf("Parse(a.{$k}) = %v", err)
+	}
+	if _, err := Parse("a[ 0 ]"); err == nil {
+		t.Error("spaces inside an index must be rejected")
+	}
+	if _, err := Parse("a{${a}${b}}"); err == nil || !strings.Contains(err.Error(), "need literal text") {
+		t.Errorf("adjacent braced variables: %v", err)
+	}
+	if _, err := Parse("a{a$}"); err == nil || !strings.Contains(err.Error(), "invalid variable name") {
+		t.Errorf("dangling $: %v", err)
+	}
+	if _, err := ParseTemplate("${a"); err == nil || !strings.Contains(err.Error(), "unterminated") {
+		t.Errorf("ParseTemplate(${a) = %v", err)
+	}
+}
+
+// TestParseStringRoundTrip pins that a parsed path renders as it was written
+// and that parsing that text again yields the same steps.
+func TestParseStringRoundTrip(t *testing.T) {
+	for _, expr := range []string{"a.b[0]{$k}", "/x{line_$i}.y", ".", "/", `"q.k".z`, "items[*].n{*}"} {
+		p := mustPath(t, expr)
+		again := mustPath(t, p.String())
+		if stepsString(p) != stepsString(again) || strings.Join(p.Vars(), ",") != strings.Join(again.Vars(), ",") {
+			t.Errorf("%q does not round-trip through String()", expr)
+		}
+	}
+}
+
+func TestVarsAndBindingsAreIsolated(t *testing.T) {
+	p := mustPath(t, "a[$i]{$k}")
+	vars := p.Vars()
+	vars[0] = "changed"
+	if p.Vars()[0] != "i" {
+		t.Error("Vars must return a copy")
+	}
+	b := Bindings{"i": "0"}
+	c := b.Clone()
+	c["i"] = "1"
+	c["k"] = "x"
+	if b["i"] != "0" || len(b) != 1 {
+		t.Error("Clone must not share the map")
+	}
+	if !ValidVarName("_a1") || ValidVarName("1a") || ValidVarName("") || ValidVarName("a-b") {
+		t.Error("ValidVarName")
+	}
+}
+
+func TestExpandEdgeCases(t *testing.T) {
+	doc := mustDecode(t, `{"items": [{"id": "a", "tags": ["x", "y"]}, {"id": "b", "tags": ["z"]}], "map": {"k": [1, 2]}, "n": 5}`)
+	// A bound index selects even when written with a leading zero.
+	m, err := mustPath(t, "items[$i].id").Expand(doc, doc, Bindings{"i": "01"})
+	if err != nil || len(m) != 1 || !m[0].Present || m[0].Value != "b" {
+		t.Errorf("leading-zero index = %+v, %v", m, err)
+	}
+	// A bound index on a value that is not an array is absent, not an error.
+	m, err = mustPath(t, "n[$i]").Expand(doc, doc, Bindings{"i": "0"})
+	if err != nil || len(m) != 1 || m[0].Present {
+		t.Errorf("index into a scalar = %+v, %v", m, err)
+	}
+	// An out-of-range index is absent.
+	m, err = mustPath(t, "items[$i].id").Expand(doc, doc, Bindings{"i": "7"})
+	if err != nil || len(m) != 1 || m[0].Present {
+		t.Errorf("out-of-range index = %+v, %v", m, err)
+	}
+	// Errors inside iterations propagate: the inner index is bound to text.
+	if _, err := mustPath(t, "items[$i].tags[$j]").Expand(doc, doc, Bindings{"j": "x"}); err == nil {
+		t.Error("a bad inner binding must fail while iterating an array")
+	}
+	if _, err := mustPath(t, "map{$k}[$j]").Expand(doc, doc, Bindings{"j": "x"}); err == nil {
+		t.Error("a bad inner binding must fail while iterating an object")
+	}
+	if _, err := mustPath(t, "items[$i]").Expand(doc, doc, Bindings{"i": "99999999999999999999"}); err == nil {
+		t.Error("an index beyond int range must fail")
+	}
+	if _, err := mustPath(t, "items[$i]").Expand(doc, doc, Bindings{"i": "-1"}); err == nil {
+		t.Error("a negative index must fail")
+	}
+	// Iterating a template over a document with a hole skips the hole.
+	holed := map[string]any{"a": []any{hole{}}}
+	m, err = mustPath(t, "a[$i]").Expand(holed, holed, Bindings{})
+	if err != nil || len(m) != 0 {
+		t.Errorf("holes must not match: %+v, %v", m, err)
+	}
+}
+
+func TestResolveAndLocationEdgeCases(t *testing.T) {
+	loc, err := mustPath(t, "a[2].b").Resolve(nil, Bindings{})
+	if err != nil || loc.String() != "a[2].b" {
+		t.Errorf("literal index = %q, %v", loc, err)
+	}
+	if _, err := mustPath(t, "m{$k}").Resolve(nil, Bindings{}); err == nil || !strings.Contains(err.Error(), "$k is not bound") {
+		t.Errorf("unbound template variable = %v", err)
+	}
+	if _, err := mustPath(t, "m{$k}").Resolve(nil, Bindings{"k": ""}); err != nil {
+		t.Errorf("an empty key is a valid key: %v", err)
+	}
+	loc, _ = mustPath(t, "[0].x[1]").Resolve(nil, Bindings{})
+	if loc.String() != "[0].x[1]" {
+		t.Errorf("index-first location = %q", loc)
+	}
+	loc, _ = mustPath(t, "a[$i]").Resolve(nil, Bindings{"i": "007"})
+	if loc.String() != "a[7]" {
+		t.Errorf("leading zeros = %q", loc)
+	}
+	// Get through a hole or a missing key is absent.
+	var out any
+	Set(&out, Location{Key("a"), Index(2)}, "v")
+	if _, ok := Get(out, Location{Key("a"), Index(0), Key("x")}); ok {
+		t.Error("reading through a hole must be absent")
+	}
+	if _, ok := Get(out, Location{Key("missing")}); ok {
+		t.Error("a missing key must be absent")
+	}
+	if _, ok := Get("scalar", Location{Key("a")}); ok {
+		t.Error("a key on a scalar must be absent")
+	}
+	if v, ok := Get(out, nil); !ok || v == nil {
+		t.Error("the root location reads the whole document")
+	}
+}
+
+func TestSetReplacesWrongContainers(t *testing.T) {
+	// An object in the way of an index becomes an array, and an array in the
+	// way of a key becomes an object; explicit nulls are kept by Compact.
+	var doc any = map[string]any{"a": map[string]any{"old": true}}
+	Set(&doc, Location{Key("a"), Index(1)}, "v")
+	got, _ := json.Marshal(Compact(doc))
+	if string(got) != `{"a":["v"]}` {
+		t.Errorf("index into an object built %s", got)
+	}
+	doc = []any{"x"}
+	Set(&doc, Location{Key("k")}, nil)
+	got, _ = json.Marshal(Compact(doc))
+	if string(got) != `{"k":null}` {
+		t.Errorf("key into an array built %s", got)
+	}
+	// Writing over a hole fills it.
+	doc = nil
+	Set(&doc, Location{Index(1)}, 1)
+	Set(&doc, Location{Index(0)}, 0)
+	got, _ = json.Marshal(Compact(doc))
+	if string(got) != `[0,1]` {
+		t.Errorf("filling a hole built %s", got)
+	}
+	// Compact leaves scalars and nulls alone.
+	if Compact(nil) != nil || Compact("s") != "s" {
+		t.Error("Compact of scalars")
+	}
+}

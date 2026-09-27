@@ -46,6 +46,11 @@ with the keys concerned.
 - The `t1k` command line tool (`-in`, `-out`, `-config`, `-reverse`,
   `-compact`, `-print-config`, `-version`).
 - CI (lint, race tests, build, govulncheck) and the MkDocs documentation site.
+- Edge-case test suites for every package (error paths with their rule
+  positions, join and iteration corner cases, degenerate inputs, the default
+  mapping for every technology kind), fuzz targets for the parsers and the
+  transformation with `make fuzz` and a CI smoke, and benchmarks with
+  `make bench`.
 - `environment/`: a containerized development and test environment (Go
   toolchain, the CI-pinned golangci-lint, MkDocs) with compose services for
   tests, lint, the docs server, the `t1k` command and a shell, selected with

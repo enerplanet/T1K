@@ -2,10 +2,14 @@ package main
 
 import (
 	"bytes"
+	"errors"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+	"testing/iotest"
+
+	"github.com/enerplanet/T1K/pkg/t1k"
 )
 
 const payload = "../../examples/enerplanet-calculation.json"
@@ -108,5 +112,44 @@ func TestFailures(t *testing.T) {
 	}
 	if code, _, stderr := runCLI(t, `{}`, "-out", filepath.Join(t.TempDir(), "missing-dir", "out.json")); code != exitError || !strings.Contains(stderr, "write output") {
 		t.Errorf("unwritable output: %d %q", code, stderr)
+	}
+}
+
+func TestPrintConfigMatchesTheEmbeddedMapping(t *testing.T) {
+	code, out, _ := runCLI(t, "", "-print-config")
+	if code != exitOK || out != string(t1k.DefaultConfigJSON())+"\n" {
+		t.Errorf("-print-config differs from DefaultConfigJSON (exit %d)", code)
+	}
+}
+
+func TestStdinReadError(t *testing.T) {
+	var out, errBuf bytes.Buffer
+	code := run(nil, iotest.ErrReader(errors.New("broken pipe")), &out, &errBuf)
+	if code != exitError || !strings.Contains(errBuf.String(), "read standard input: broken pipe") {
+		t.Errorf("stdin error: %d %q", code, errBuf.String())
+	}
+}
+
+func TestInvalidConfigFile(t *testing.T) {
+	dir := t.TempDir()
+	cfgPath := filepath.Join(dir, "bad.json")
+	if err := os.WriteFile(cfgPath, []byte(`{"name": "bad", "rules": [{"from": "a[$i]", "to": "b"}]}`), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	code, _, stderr := runCLI(t, `{}`, "-config", cfgPath)
+	if code != exitError || !strings.Contains(stderr, "bad.json") || !strings.Contains(stderr, "rules[0]") {
+		t.Errorf("invalid config: %d %q", code, stderr)
+	}
+}
+
+func TestReverseCompactAndFlagsTogether(t *testing.T) {
+	code, out, _ := runCLI(t, `{"model": {"metadata": {"name": "m"}}}`, "-reverse", "-compact")
+	if code != exitOK || !strings.HasPrefix(out, `{"callback_url":"","country":"","lkr":"","model_id":"m"`) {
+		t.Errorf("-reverse -compact: %d %q", code, out)
+	}
+	// -in takes precedence over standard input.
+	code, out, _ = runCLI(t, `not json`, "-in", payload, "-compact")
+	if code != exitOK || !strings.HasPrefix(out, `{"experiment":`) {
+		t.Errorf("-in with junk on stdin: %d %q", code, out[:min(len(out), 40)])
 	}
 }

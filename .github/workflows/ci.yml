@@ -41,6 +41,17 @@ jobs:
           ./t1k -reverse -in meme.json -out back.json
           test -s meme.json && test -s back.json
 
+  fuzz:
+    name: fuzz
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: Fuzz smoke (10s per target)
+        run: make fuzz FUZZTIME=10s
+
   environment:
     name: environment
     runs-on: ubuntu-latest

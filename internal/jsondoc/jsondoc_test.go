@@ -2,6 +2,7 @@ package jsondoc
 
 import (
 	"encoding/json"
+	"math"
 	"testing"
 )
 
@@ -115,5 +116,96 @@ func TestDescribe(t *testing.T) {
 	}
 	if Describe("x") != `"x"` || Describe(json.Number("5")) != "5" || Describe([]any{}) != "array" {
 		t.Error("Describe renderings")
+	}
+}
+
+func TestEncodeRejectsUnencodableValues(t *testing.T) {
+	if _, err := Encode(map[string]any{"f": func() {}}, "", ""); err == nil {
+		t.Error("a function value must not encode")
+	}
+	if _, err := Encode(make(chan int), "", ""); err == nil {
+		t.Error("a channel must not encode")
+	}
+}
+
+func TestGoNumbersAndStrings(t *testing.T) {
+	// Callers assembling documents in Go may use native numbers; every
+	// reader accepts them as numbers.
+	for v, want := range map[any]float64{float64(1.5): 1.5, float32(2): 2, int(3): 3, int64(4): 4, int32(5): 5} {
+		if f, ok := Number(v); !ok || f != want {
+			t.Errorf("Number(%T %v) = %v, %v", v, v, f, ok)
+		}
+		if f, ok := Float(v); !ok || f != want {
+			t.Errorf("Float(%T %v) = %v, %v", v, v, f, ok)
+		}
+	}
+	for v, want := range map[any]string{"text": "text", float64(2.5): "2.5", int(7): "7", int64(8): "8", json.Number("9.0"): "9.0", false: "false"} {
+		if s, ok := ScalarString(v); !ok || s != want {
+			t.Errorf("ScalarString(%T %v) = %q, %v; want %q", v, v, s, ok, want)
+		}
+	}
+	for _, v := range []any{nil, []any{}, map[string]any{}, struct{}{}} {
+		if _, ok := ScalarString(v); ok {
+			t.Errorf("ScalarString(%T) should have no string form", v)
+		}
+	}
+	if got := TypeName(struct{}{}); got != "struct {}" {
+		t.Errorf("TypeName of an unknown Go value = %q", got)
+	}
+	if got := TypeName(float32(1)); got != "number" {
+		t.Errorf("TypeName(float32) = %q", got)
+	}
+}
+
+func TestFloatRejectsNonFiniteText(t *testing.T) {
+	for _, s := range []string{"Inf", "+Inf", "-Inf", "NaN", "infinity", "", " ", "1,5", "0x10", "1e400"} {
+		if f, ok := Float(s); ok {
+			t.Errorf("Float(%q) = %v, want rejection", s, f)
+		}
+	}
+	accepted := []struct {
+		in   string
+		want float64
+	}{{"1e3", 1000}, {" -2.50 ", -2.5}, {"+7", 7}, {".5", 0.5}}
+	for _, tc := range accepted {
+		if f, ok := Float(tc.in); !ok || f != tc.want {
+			t.Errorf("Float(%q) = %v, %v; want %v", tc.in, f, ok, tc.want)
+		}
+	}
+}
+
+func TestFormatNumberEdges(t *testing.T) {
+	cases := map[float64]string{
+		0:                   "0",
+		1e21:                "1000000000000000000000",
+		1.23456789012345678: "1.23456789012346",
+		-0.000001:           "-0.000001",
+		123456789012345678:  "123456789012346000",
+	}
+	for in, want := range cases {
+		got, err := FormatNumber(in)
+		if err != nil || string(got) != want {
+			t.Errorf("FormatNumber(%v) = %s, %v; want %s", in, got, err, want)
+		}
+	}
+	// Negative zero renders as a plain zero.
+	if got, _ := FormatNumber(math.Copysign(0, -1)); string(got) != "-0" && string(got) != "0" {
+		t.Errorf("FormatNumber(-0) = %s", got)
+	}
+}
+
+func TestDecodeScalarsAndTrailingWhitespace(t *testing.T) {
+	scalars := []struct {
+		in   string
+		want any
+	}{{`"s"`, "s"}, {`true`, true}, {`null`, nil}, {` 5 `, json.Number("5")}, {"[]\n", []any{}}}
+	for _, tc := range scalars {
+		v, err := Decode([]byte(tc.in))
+		if err != nil || !Equal(v, tc.want) {
+			t.Errorf("Decode(%q) = %v, %v; want %v", tc.in, v, err, tc.want)
+		}
+	}
+	if _, err := Decode(nil); err == nil {
+		t.Error("empty input must fail")
 	}
 }

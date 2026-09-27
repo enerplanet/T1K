@@ -400,3 +400,239 @@ func TestDirectionString(t *testing.T) {
 		t.Error("direction names")
 	}
 }
+
+func TestEngineRuntimeErrorsInsideScopes(t *testing.T) {
+	// Every place that resolves a variable reports a binding that is not an
+	// array index, with the rule's position and the direction.
+	tests := []struct {
+		name  string
+		rules string
+		input string
+		dir   Direction
+		want  string
+	}{
+		{"copy source inside a scope", `[{"each": {"from": "m{$k}", "to": "n{$k}"}, "rules": [{"from": "/arr[$k]", "to": "v"}]}]`, `{"m": {"x": {}}, "arr": [1]}`, Forward, "rules[0].rules[0] (forward): path \"/arr[$k]\""},
+		{"copy target inside a scope", `[{"each": {"from": "m{$k}", "to": "n{$k}"}, "rules": [{"from": "v", "to": "/arr[$k]"}]}]`, `{"m": {"x": {"v": 1}}}`, Forward, "rules[0].rules[0] (forward): path \"/arr[$k]\""},
+		{"copy condition", `[{"each": {"from": "m{$k}", "to": "n{$k}"}, "rules": [{"from": "v", "to": "w", "when": {"forward": {"path": "/arr[$k]", "exists": true}}}]}]`, `{"m": {"x": {"v": 1}}, "arr": []}`, Forward, "rules[0].rules[0] (forward)"},
+		{"constant condition", `[{"each": {"from": "m{$k}", "to": "n{$k}"}, "rules": [{"to": "w", "value": 1, "when": {"forward": {"path": "/arr[$k]", "exists": true}}}]}]`, `{"m": {"x": {}}, "arr": []}`, Forward, "rules[0].rules[0] (forward)"},
+		{"scope source", `[{"each": {"from": "m{$k}", "to": "n{$k}"}, "rules": [{"each": {"from": "/arr[$k]", "to": "e"}}]}]`, `{"m": {"x": {}}, "arr": [1]}`, Forward, "rules[0].rules[0] (forward)"},
+		{"scope condition", `[{"each": {"from": "m{$k}", "to": "n{$k}"}, "rules": [{"each": {"from": "s", "to": "e"}, "when": {"forward": {"path": "/arr[$k]", "exists": true}}}]}]`, `{"m": {"x": {"s": {}}}, "arr": []}`, Forward, "rules[0].rules[0] (forward)"},
+		{"scope target", `[{"each": {"from": "m{$k}", "to": "arr[$k]"}}]`, `{"m": {"x": {}}}`, Forward, "rules[0] (forward): path \"arr[$k]\""},
+		{"bind path", `[{"each": {"from": "m{$k}", "to": "n{$k}"}, "rules": [{"each": {"from": "s[$i]", "to": "/o{$p}", "bind": {"$p": "/ids[$k]"}}}]}]`, `{"m": {"x": {"s": [{}]}}, "ids": []}`, Forward, "rules[0].rules[0] (forward): path \"/ids[$k]\""},
+		{"bind write in reverse", `[{"each": {"from": "m{$k}", "to": "n{$k}"}, "rules": [{"each": {"from": "s[$i]", "to": "o{${p}_$i}", "bind": {"$p": "/kinds[$k]"}}}]}]`, `{"n": {"x": {"o": {"a_0": {}}}}}`, Reverse, "rules[0].rules[0] (reverse): path \"/kinds[$k]\""},
+		{"join lookup", `[{"from": "l[$i].ref.id", "to": "refs[$i]"}, {"each": {"from": "l[$i].ref", "to": "/arr[$p]", "bind": {"$p": "id"}}, "rules": [{"from": "x", "to": "y"}]}]`, `{"refs": ["abc"], "arr": []}`, Reverse, "rules[1] (reverse): path \"/arr[$p]\""},
+		{"join condition", `[{"from": "l[$i].ref.id", "to": "refs[$i]"}, {"each": {"from": "l[$i].ref", "to": "/m{$p}", "bind": {"$p": "id"}}, "when": {"reverse": {"path": "/arr[$p]", "exists": true}}, "rules": [{"from": "x", "to": "y"}]}]`, `{"refs": ["abc"], "m": {"abc": {"y": 1}}, "arr": []}`, Reverse, "rules[1] (reverse): path \"/arr[$p]\""},
+		{"join bind missing", `[{"from": "l[$i].ref.name", "to": "names[$i]"}, {"each": {"from": "l[$i].ref", "to": "/m{$p}", "bind": {"$p": "id"}}, "rules": [{"from": "x", "to": "y"}]}]`, `{"names": ["n"], "m": {}}`, Reverse, `bind $p: "id" not found`},
+		{"join nested rule", `[{"from": "l[$i].ref.id", "to": "refs[$i]"}, {"each": {"from": "l[$i].ref", "to": "/m{$p}", "bind": {"$p": "id"}}, "rules": [{"from": "x", "to": "/arr[$p]"}]}]`, `{"refs": ["abc"], "m": {"abc": {}}, "arr": []}`, Reverse, "rules[1].rules[0] (reverse): path \"/arr[$p]\""},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			_, err := runRules(t, tc.rules, tc.input, tc.dir)
+			if err == nil || !errors.Is(err, ErrRule) || !strings.Contains(err.Error(), tc.want) {
+				t.Fatalf("error = %v, want ErrRule mentioning %q", err, tc.want)
+			}
+		})
+	}
+}
+
+func TestEngineJoinEdgeCases(t *testing.T) {
+	runEngineCases(t, []engineCase{
+		{
+			// A nested join whose parent element was never created in the output has nothing to join onto.
+			name: "join without a created base",
+			rules: `[{"each": {"from": "groups{$g}", "to": "byGroup{$g}"}, "rules": [
+			          {"each": {"from": "members[$i].ref", "to": "/people{$p}", "bind": {"$p": "id"}}, "rules": [{"from": "name", "to": "label"}]}]}]`,
+			input:   `{"groups": {}}`,
+			reverse: `{}`,
+			revIn:   `{"byGroup": {"a": {}}, "people": {"x": {"label": "X"}}}`,
+		},
+		{
+			name: "join skips elements whose reverse condition fails",
+			rules: `[{"from": "l[$i].ref.id", "to": "ids[$i]"},
+			         {"each": {"from": "l[$i].ref", "to": "m{$p}", "bind": {"$p": "id"}}, "when": {"reverse": {"path": "on", "equals": true}}, "rules": [{"from": "x", "to": "y"}]}]`,
+			input:   `{"l": []}`,
+			reverse: `{"l": [{"ref": {"id": "a", "x": 1}}, {"ref": {"id": "b"}}]}`,
+			revIn:   `{"ids": ["a", "b"], "m": {"a": {"on": true, "y": 1}, "b": {"on": false, "y": 2}}}`,
+		},
+		{
+			name: "join reads bind values from nested paths and numbers",
+			rules: `[{"from": "l[$i].ref.meta.num", "to": "nums[$i]"},
+			         {"each": {"from": "l[$i].ref", "to": "m{n_$p}", "bind": {"$p": "meta.num"}}, "rules": [{"from": "x", "to": "y"}]}]`,
+			input:   `{"l": [{"ref": {"meta": {"num": 7}, "x": "seven"}}]}`,
+			forward: `{"nums": [7], "m": {"n_7": {"y": "seven"}}}`,
+			reverse: `{"l": [{"ref": {"meta": {"num": 7}, "x": "seven"}}]}`,
+		},
+		{
+			name:    "forward dedupes repeated keyed elements",
+			rules:   `[{"each": {"from": "l[$i]", "to": "m{$k}", "bind": {"$k": "id"}}, "rules": [{"from": "v", "to": "w"}, {"to": "seen", "value": true}]}]`,
+			input:   `{"l": [{"id": "a", "v": 1}, {"id": "a", "v": 2}, {"id": "b"}]}`,
+			forward: `{"m": {"a": {"w": 2, "seen": true}, "b": {"seen": true}}}`,
+		},
+	})
+}
+
+func TestEngineReverseIterateWritesKeysAsStrings(t *testing.T) {
+	// In iterate mode the reverse writes bound variables back as strings,
+	// even when the forward direction read them from numbers; the key of an
+	// object cannot carry a type.
+	runEngineCases(t, []engineCase{{
+		name:    "numeric bind value comes back as a string",
+		rules:   `[{"each": {"from": "l[$i]", "to": "m{${n}_$i}", "bind": {"$n": "num"}}, "rules": [{"from": "v", "to": "w"}]}]`,
+		input:   `{"l": [{"num": 7, "v": 1}]}`,
+		forward: `{"m": {"7_0": {"w": 1}}}`,
+		reverse: `{"l": [{"num": "7", "v": 1}]}`,
+	}})
+}
+
+func TestEngineRootsAndNulls(t *testing.T) {
+	runEngineCases(t, []engineCase{
+		{
+			name:    "null input yields only constants",
+			rules:   `[{"from": "a", "to": "b"}, {"to": "c", "value": 1}, {"from": "d", "value": 2}]`,
+			input:   `null`,
+			forward: `{"c": 1}`,
+			reverse: `{"d": 2}`,
+			revIn:   `null`,
+		},
+		{
+			name:    "array input",
+			rules:   `[{"from": "[0]", "to": "first"}, {"from": "[$i].n", "to": "names[$i]"}]`,
+			input:   `[{"n": "a"}, {"n": "b"}]`,
+			forward: `{"first": {"n": "a"}, "names": ["a", "b"]}`,
+		},
+		{
+			name:    "writing the root replaces the output",
+			rules:   `[{"from": "wrapped", "to": "/"}]`,
+			input:   `{"wrapped": [1, 2]}`,
+			forward: `[1, 2]`,
+			reverse: `{"wrapped": [1, 2]}`,
+		},
+		{
+			name:    "a later root write wins over earlier keys",
+			rules:   `[{"to": "a", "value": 1}, {"to": "/", "value": "flat"}]`,
+			input:   `{}`,
+			forward: `"flat"`,
+		},
+		{
+			name:    "explicit nulls survive compaction next to holes",
+			rules:   `[{"from": "m{item_$i}", "to": "l[$i]"}]`,
+			input:   `{"m": {"item_0": null, "item_2": 2}}`,
+			forward: `{"l": [null, 2]}`,
+		},
+	})
+}
+
+func TestEngineConditionOperators(t *testing.T) {
+	runEngineCases(t, []engineCase{
+		{
+			name: "in without a member and exists false on a present value",
+			rules: `[{"from": "a", "to": "x", "when": {"forward": {"path": "n", "in": [1, 2]}}},
+			         {"from": "a", "to": "y", "when": {"forward": {"path": "n", "exists": false}}},
+			         {"from": "a", "to": "z", "when": {"forward": {"path": "missing", "not_equals": 1}}},
+			         {"from": "a", "to": "w", "when": {"forward": {"path": "s", "gte": 1}}},
+			         {"from": "a", "to": "v", "when": {"forward": {"path": "n", "in": [3, "x", null]}}}]`,
+			input:   `{"a": 1, "n": 3, "s": "text"}`,
+			forward: `{"z": 1, "v": 1}`,
+		},
+		{
+			name:    "comparisons are numeric across representations",
+			rules:   `[{"from": "a", "to": "x", "when": {"forward": [{"path": "n", "gt": 2.5}, {"path": "n", "lt": 3.5}, {"path": "n", "equals": 3.0}]}}]`,
+			input:   `{"a": 1, "n": 3}`,
+			forward: `{"x": 1}`,
+		},
+		{
+			name:    "objects and arrays compare structurally in equals and in",
+			rules:   `[{"from": "a", "to": "x", "when": {"forward": {"path": "o", "equals": {"k": [1, {"z": null}]}}}}, {"from": "a", "to": "y", "when": {"forward": {"path": "o", "in": [1, {"k": [1, {"z": null}]}]}}}]`,
+			input:   `{"a": 1, "o": {"k": [1.0, {"z": null}]}}`,
+			forward: `{"x": 1, "y": 1}`,
+		},
+	})
+}
+
+func TestEngineTemplatesAndConstants(t *testing.T) {
+	runEngineCases(t, []engineCase{
+		{
+			name:    "templates render literal dollars and several variables",
+			rules:   `[{"each": {"from": "g{$a}[$i]", "to": "out{$a}[$i]"}, "rules": [{"to": "id", "template": "$$-${a}-$i"}]}]`,
+			input:   `{"g": {"x": [{}, {}]}}`,
+			forward: `{"out": {"x": [{"id": "$-x-0"}, {"id": "$-x-1"}]}}`,
+		},
+		{
+			name:    "constants copy their value so repeated writes do not alias",
+			rules:   `[{"each": {"from": "l[$i]", "to": "o[$i]"}, "rules": [{"to": "cfg", "value": {"list": [1]}}]}, {"to": "o[0].cfg.list[1]", "value": 2}]`,
+			input:   `{"l": [{}, {}]}`,
+			forward: `{"o": [{"cfg": {"list": [1, 2]}}, {"cfg": {"list": [1]}}]}`,
+		},
+		{
+			name:    "a reverse-only constant is ignored forward and vice versa",
+			rules:   `[{"from": "kind", "value": "src"}, {"to": "kind", "value": "dst"}]`,
+			input:   `{"kind": "whatever"}`,
+			forward: `{"kind": "dst"}`,
+			reverse: `{"kind": "src"}`,
+		},
+	})
+}
+
+// FuzzCompile checks that no configuration text can panic the compiler.
+func FuzzCompile(f *testing.F) {
+	for _, seed := range []string{
+		`{"name": "x", "rules": []}`,
+		`{"name": "x", "rules": [{"from": "a[$i]", "to": "b{item_$i}", "convert": {"linear": {"divisor": 1000}}}]}`,
+		`{"name": "x", "definitions": {"d": [{"use": "d"}]}, "rules": [{"use": "d"}]}`,
+		`{"name": "x", "rules": [{"each": {"from": "l[$i].f", "to": "m{$k}", "bind": {"$k": "id"}}, "when": {"forward": {"path": "x", "gt": 0}}, "rules": [{"to": "n", "template": "$k"}]}]}`,
+		`[]`, `{`, `{"name": 1}`,
+	} {
+		f.Add([]byte(seed))
+	}
+	f.Fuzz(func(t *testing.T, data []byte) {
+		p, err := Compile(data)
+		if err != nil {
+			if !errors.Is(err, ErrConfig) {
+				t.Fatalf("compile error does not wrap ErrConfig: %v", err)
+			}
+			return
+		}
+		for _, in := range []any{nil, map[string]any{"a": []any{map[string]any{"id": "x"}}}, []any{"s"}} {
+			for _, dir := range []Direction{Forward, Reverse} {
+				if _, err := p.Run(dir, in); err != nil && !errors.Is(err, ErrRule) {
+					t.Fatalf("run error does not wrap ErrRule: %v", err)
+				}
+			}
+		}
+	})
+}
+
+// FuzzRun checks that a fixed, feature-rich program never panics on
+// arbitrary documents and only ever fails with ErrRule.
+func FuzzRun(f *testing.F) {
+	program, err := Compile([]byte(`{"name": "fuzz", "rules": [
+	  {"from": "a.b", "to": "x.y", "convert": [{"absent": {"values": ["inf"]}}, {"linear": {"divisor": 10}}], "reverse_default": "inf"},
+	  {"to": "k", "value": 1},
+	  {"each": {"from": "l[$i]", "to": "m{${p}_$i}", "bind": {"$p": "kind"}}, "when": {"forward": {"path": "on", "not_equals": false}}, "rules": [{"from": "v", "to": "w", "convert": "number"}]},
+	  {"each": {"from": "l[$i].ref", "to": "n{$q}", "bind": {"$q": "id"}}, "rules": [{"from": "name", "to": "label"}, {"to": "node", "template": "$q"}]}
+	]}`))
+	if err != nil {
+		f.Fatal(err)
+	}
+	for _, seed := range []string{`{"a": {"b": "5"}, "l": [{"kind": "x", "v": "1", "ref": {"id": "r", "name": "R"}}]}`, `{"m": {"x_0": {"w": 2}}, "n": {"r": {"label": "L"}}}`, `null`, `[]`, `{"l": [{"kind": 1}]}`, `{"m": {"x_a": {}}}`} {
+		f.Add([]byte(seed))
+	}
+	f.Fuzz(func(t *testing.T, data []byte) {
+		in, err := jsondoc.Decode(data)
+		if err != nil {
+			return
+		}
+		for _, dir := range []Direction{Forward, Reverse} {
+			out, err := program.Run(dir, in)
+			if err != nil {
+				if !errors.Is(err, ErrRule) {
+					t.Fatalf("run error does not wrap ErrRule: %v", err)
+				}
+				continue
+			}
+			if _, err := jsondoc.Encode(out, "", ""); err != nil {
+				t.Fatalf("output does not encode: %v", err)
+			}
+		}
+	})
+}
