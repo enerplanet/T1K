@@ -8,5 +8,5 @@
 
 Regenerate both outputs with `make example`. The
 [mapping page](https://enerplanet.github.io/T1K/mappings/enerplanet-to-meme/)
-explains every field and what the reverse restores; the `testdata/` golden
-files pin the same conversions for the test suite.
+explains every field and what the reverse restores; the golden files in
+`pkg/t1k/testdata/` pin the same conversions for the test suite.

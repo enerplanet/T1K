@@ -86,7 +86,7 @@ import (
 	"fmt"
 	"os"
 
-	t1k "github.com/enerplanet/T1K"
+	"github.com/enerplanet/T1K/pkg/t1k"
 )
 
 func main() {

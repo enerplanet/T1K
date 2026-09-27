@@ -26,7 +26,7 @@ fmt:
 
 # Regenerate the golden files after a deliberate change to the default mapping.
 golden-update:
-	go test -run 'TestDefaultMappingGolden' -update ./
+	go test -run 'TestDefaultMappingGolden' -update ./pkg/t1k
 
 # Convert the example payload both ways into examples/.
 example: build

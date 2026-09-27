@@ -15,15 +15,16 @@ directory is on your `PATH`.
 ## The package
 
 ```bash
-go get github.com/enerplanet/T1K
+go get github.com/enerplanet/T1K/pkg/t1k
 ```
 
 ```go
-import t1k "github.com/enerplanet/T1K"
+import "github.com/enerplanet/T1K/pkg/t1k"
 ```
 
-The import path keeps the repository's capitalisation (`T1K`); the package
-name is `t1k`.
+The module path keeps the repository's capitalisation (`T1K`); the package
+lives under `pkg/t1k`, the layout the organisation's shared Go libraries
+use, and is imported as `t1k`.
 
 ## From a clone
 

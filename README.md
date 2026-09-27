@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/enerplanet/T1K/actions/workflows/ci.yml/badge.svg)](https://github.com/enerplanet/T1K/actions/workflows/ci.yml)
 [![MkDocs](https://github.com/enerplanet/T1K/actions/workflows/docs.yml/badge.svg)](https://enerplanet.github.io/T1K)
-[![Go Reference](https://pkg.go.dev/badge/github.com/enerplanet/T1K.svg)](https://pkg.go.dev/github.com/enerplanet/T1K)
+[![Go Reference](https://pkg.go.dev/badge/github.com/enerplanet/T1K/pkg/t1k.svg)](https://pkg.go.dev/github.com/enerplanet/T1K/pkg/t1k)
 
 T1K converts one JSON structure into another, driven by a declarative mapping
 configuration, and converts the result back again. It is a Go package with a
@@ -49,7 +49,7 @@ describes every construct.
 
 ```bash
 go install github.com/enerplanet/T1K/cmd/t1k@latest   # the command
-go get github.com/enerplanet/T1K                       # the package
+go get github.com/enerplanet/T1K/pkg/t1k               # the package
 ```
 
 Go 1.23 or newer is required. `make build` produces `bin/t1k` from a clone.
@@ -82,7 +82,7 @@ message names the rule and the direction); 2 reports a usage error.
 ## Go package
 
 ```go
-import t1k "github.com/enerplanet/T1K"
+import "github.com/enerplanet/T1K/pkg/t1k"
 
 task := t1k.NewTransformTask()          // the embedded EnerPlanET -> MEME mapping
 memeJob, err := task.Transform(payload) // payload: the calculation JSON
@@ -118,7 +118,7 @@ make lint        # go vet + golangci-lint
 make example     # convert examples/enerplanet-calculation.json both ways
 ```
 
-Golden files under `testdata/` pin the default mapping's output; refresh them
+Golden files under `pkg/t1k/testdata/` pin the default mapping's output; refresh them
 with `make golden-update` after a deliberate change. See
 [CONTRIBUTING.md](CONTRIBUTING.md) for the workflow and the commit convention.
 

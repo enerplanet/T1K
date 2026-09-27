@@ -8,6 +8,12 @@ with the keys concerned.
 
 ## [Unreleased]
 
+### Changed
+
+- The library package moved from the module root to `pkg/t1k`; import it
+  as `github.com/enerplanet/T1K/pkg/t1k`. The mapping files stay in
+  `config/`, now embedded through the `config` package.
+
 ### Added
 
 - The `t1k` package: `TransformTask` with `Transform` and `Reverse`, driven

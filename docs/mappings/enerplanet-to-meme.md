@@ -170,8 +170,8 @@ the payload's required keys with the placeholders listed. Two limits:
   MEME job; the reverse writes empty strings, and the caller must set them
   (the simulation engine's schema requires a non-empty `country`).
 
-`examples/` holds the payload, the job and the reverse output; `testdata/`
-pins both directions, and the tests check that converting the reverse output
+`examples/` holds the payload, the job and the reverse output;
+`pkg/t1k/testdata/` pins both directions, and the tests check that converting the reverse output
 forward again reproduces the job apart from the standalone building.
 
 ## Adapting the mapping

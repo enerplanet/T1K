@@ -14,22 +14,23 @@ directions and `govulncheck` on every push and pull request.
 
 | Tests | What they pin |
 |---|---|
-| `path_test.go` | parsing of every path form and its error messages, key template matching and rendering, matching with bound and unbound variables, concrete locations, reads and writes, compaction |
-| `convert_test.go` | every converter forward and back (each case is run both ways), argument validation, chains, number formatting, JSON decoding and equality |
-| `config_test.go` | a valid configuration with every construct, and one case per validation error with the message it must produce |
-| `engine_test.go` | table cases for copy rules, constants and templates, arrays and keyed objects, `each` in iterate and join mode, nested scopes, conditions, defaults, error reporting and the no-aliasing guarantee; each case checks forward and reverse |
-| `t1k_test.go` | the public API, golden files for the default mapping, the round-trip property, the concurrency guarantee |
+| `pkg/t1k/path_test.go` | parsing of every path form and its error messages, key template matching and rendering, matching with bound and unbound variables, concrete locations, reads and writes, compaction |
+| `pkg/t1k/convert_test.go` | every converter forward and back (each case is run both ways), argument validation, chains, number formatting, JSON decoding and equality |
+| `pkg/t1k/config_test.go` | a valid configuration with every construct, and one case per validation error with the message it must produce |
+| `pkg/t1k/engine_test.go` | table cases for copy rules, constants and templates, arrays and keyed objects, `each` in iterate and join mode, nested scopes, conditions, defaults, error reporting and the no-aliasing guarantee; each case checks forward and reverse |
+| `pkg/t1k/t1k_test.go` | the public API, golden files for the default mapping, the round-trip property, the concurrency guarantee |
+| `config/config_test.go` | the default mapping is embedded and is JSON |
 | `cmd/t1k/main_test.go` | flags, files, standard streams, exit codes and error messages |
 
 ## Golden files
 
-`testdata/meme-job.golden.json` and `testdata/enerplanet-reverse.golden.json`
-are the outputs of the default mapping for `examples/enerplanet-calculation.json`
+`pkg/t1k/testdata/meme-job.golden.json` and
+`pkg/t1k/testdata/enerplanet-reverse.golden.json` are the outputs of the default mapping for `examples/enerplanet-calculation.json`
 in both directions. After a deliberate change to the mapping:
 
 ```bash
 make golden-update
-git diff testdata
+git diff pkg/t1k/testdata
 ```
 
 Review every changed line; the diff is the change's effect on the contract.

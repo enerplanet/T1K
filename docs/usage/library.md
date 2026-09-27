@@ -1,10 +1,10 @@
 # Go package
 
 ```go
-import t1k "github.com/enerplanet/T1K"
+import "github.com/enerplanet/T1K/pkg/t1k"
 ```
 
-Package documentation: [pkg.go.dev/github.com/enerplanet/T1K](https://pkg.go.dev/github.com/enerplanet/T1K).
+Package documentation: [pkg.go.dev/github.com/enerplanet/T1K/pkg/t1k](https://pkg.go.dev/github.com/enerplanet/T1K/pkg/t1k).
 
 ## Transforming
 
@@ -27,7 +27,7 @@ pattern) is cheap.
 
 | Function | Purpose |
 |---|---|
-| `DefaultConfig()` | the embedded mapping (`config/enerplanet-to-meme.json`), parsed when the package initialises |
+| `DefaultConfig()` | the embedded mapping (`config/enerplanet-to-meme.json`, shipped by the `config` package), parsed when the package initialises |
 | `DefaultConfigJSON()` | a copy of its JSON text |
 | `LoadConfig(data []byte)` | parse and validate a configuration |
 | `LoadConfigFile(path string)` | the same from a file |

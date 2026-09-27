@@ -11,10 +11,10 @@
 // once and read in both directions, one configuration gives both the forward
 // transformation (Transform) and its reverse (Reverse).
 //
-// The package ships with a default configuration, embedded from
-// config/enerplanet-to-meme.json, that turns an EnerPlanET calculation
-// payload into a MEME job. Any other configuration can be loaded with
-// LoadConfig or LoadConfigFile.
+// The package ships with a default configuration, config/enerplanet-to-meme.json
+// in the repository (embedded through the config package), that turns an
+// EnerPlanET calculation payload into a MEME job. Any other configuration can
+// be loaded with LoadConfig or LoadConfigFile.
 //
 //	task := t1k.NewTransformTask()
 //	meme, err := task.Transform(enerplanetPayload)

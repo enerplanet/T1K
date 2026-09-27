@@ -13,7 +13,7 @@ import (
 
 var update = flag.Bool("update", false, "rewrite the golden files in testdata from the current output")
 
-const examplePayload = "examples/enerplanet-calculation.json"
+const examplePayload = "../../examples/enerplanet-calculation.json"
 
 func readFile(t *testing.T, path string) []byte {
 	t.Helper()

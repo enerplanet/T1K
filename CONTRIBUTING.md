@@ -58,7 +58,7 @@ rebase on `main` instead of merging it into your branch.
 ### Changing the engine or the configuration format
 
 - Every construct of the mapping language is covered by a table test in
-  `engine_test.go` or `config_test.go`; add a case for new behaviour and for
+  `pkg/t1k/engine_test.go` or `pkg/t1k/config_test.go`; add a case for new behaviour and for
   the error message a misuse produces.
 - The reverse direction is part of the contract. A new converter must be
   invertible and tested in both directions; a new rule construct must define
@@ -68,12 +68,13 @@ rebase on `main` instead of merging it into your branch.
 
 ### Changing the default mapping
 
-`config/enerplanet-to-meme.json` is embedded into the package and pinned by
-the golden files in `testdata/`. After a deliberate change:
+`config/enerplanet-to-meme.json` is embedded into the package (through the
+`config` package) and pinned by the golden files in `pkg/t1k/testdata/`.
+After a deliberate change:
 
 ```bash
-make golden-update   # rewrite testdata/*.golden.json
-git diff testdata    # review every changed line
+make golden-update         # rewrite pkg/t1k/testdata/*.golden.json
+git diff pkg/t1k/testdata  # review every changed line
 ```
 
 Explain the change and its effect on the reverse direction in the pull

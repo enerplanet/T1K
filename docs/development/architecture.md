@@ -1,20 +1,24 @@
 # Architecture
 
-T1K is one Go package, `t1k`, plus the `cmd/t1k` command. It depends only on
-the standard library.
+T1K is the `t1k` package under `pkg/t1k`, the `config` package that ships
+the mapping files, and the `cmd/t1k` command. It depends only on the
+standard library. `pkg/` follows the layout of the organisation's shared Go
+libraries; the Go team's own layout guide would also accept the package at
+the module root.
 
 ## Files
 
 | File | Responsibility |
 |---|---|
-| `t1k.go` | the public API: `TransformTask`, options, `DefaultConfig`, the embedded default mapping parsed at package initialisation |
-| `config.go` | parsing and strict validation of a mapping into compiled rules; `definitions`/`use` splicing; variable balance checks |
-| `path.go` | the path language: parsing, key templates, matching with bindings, concrete locations, reads and writes on the JSON tree, array compaction |
-| `convert.go` | the converter registry and the invertible converters |
-| `engine.go` | applying compiled rules to a document in either direction |
-| `value.go` | the generic JSON tree: decoding with `json.Number`, encoding, deep copy, structural equality, number formatting |
+| `pkg/t1k/t1k.go` | the public API: `TransformTask`, options, `DefaultConfig`, the default mapping parsed at package initialisation |
+| `pkg/t1k/config.go` | parsing and strict validation of a mapping into compiled rules; `definitions`/`use` splicing; variable balance checks |
+| `pkg/t1k/path.go` | the path language: parsing, key templates, matching with bindings, concrete locations, reads and writes on the JSON tree, array compaction |
+| `pkg/t1k/convert.go` | the converter registry and the invertible converters |
+| `pkg/t1k/engine.go` | applying compiled rules to a document in either direction |
+| `pkg/t1k/value.go` | the generic JSON tree: decoding with `json.Number`, encoding, deep copy, structural equality, number formatting |
 | `cmd/t1k/main.go` | the command line: flags, files, exit codes |
-| `config/enerplanet-to-meme.json` | the default mapping, embedded with `go:embed` |
+| `config/config.go` | the `config` package: embeds every mapping in `config/` with `go:embed` and names the default one |
+| `config/enerplanet-to-meme.json` | the default mapping |
 
 ## Pipeline
 

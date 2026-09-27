@@ -15,7 +15,7 @@ import (
 	"io"
 	"os"
 
-	t1k "github.com/enerplanet/T1K"
+	"github.com/enerplanet/T1K/pkg/t1k"
 )
 
 // version is set at build time (-ldflags "-X main.version=...").

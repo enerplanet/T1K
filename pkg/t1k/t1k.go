@@ -1,19 +1,27 @@
 package t1k
 
 import (
-	_ "embed"
 	"fmt"
+
+	"github.com/enerplanet/T1K/config"
 )
 
 // defaultConfigJSON is the mapping shipped with the package: the conversion
-// of an EnerPlanET calculation payload into a MEME job. It is parsed once,
-// when the package initialises, and shared by every task created without an
+// of an EnerPlanET calculation payload into a MEME job, embedded from the
+// repository's config directory by the config package. It is parsed once,
+// when this package initialises, and shared by every task created without an
 // explicit configuration.
-//
-//go:embed config/enerplanet-to-meme.json
-var defaultConfigJSON []byte
+var defaultConfigJSON = mustReadDefault()
 
 var defaultConfig = mustLoadConfig(defaultConfigJSON)
+
+func mustReadDefault() []byte {
+	data, err := config.Read(config.Default)
+	if err != nil {
+		panic(fmt.Sprintf("t1k: embedded default configuration %s is missing: %v", config.Default, err))
+	}
+	return data
+}
 
 func mustLoadConfig(data []byte) *Config {
 	cfg, err := LoadConfig(data)
@@ -23,8 +31,8 @@ func mustLoadConfig(data []byte) *Config {
 	return cfg
 }
 
-// DefaultConfig returns the mapping configuration embedded in the package
-// (config/enerplanet-to-meme.json in the repository).
+// DefaultConfig returns the mapping configuration embedded from
+// config/enerplanet-to-meme.json in the repository.
 func DefaultConfig() *Config { return defaultConfig }
 
 // DefaultConfigJSON returns a copy of the embedded default configuration's
