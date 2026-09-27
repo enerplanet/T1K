@@ -1,70 +1,127 @@
+# T1K
 
-# THD-Spatial-AI Repository Template
+[![CI](https://github.com/enerplanet/T1K/actions/workflows/ci.yml/badge.svg)](https://github.com/enerplanet/T1K/actions/workflows/ci.yml)
+[![MkDocs](https://github.com/enerplanet/T1K/actions/workflows/docs.yml/badge.svg)](https://enerplanet.github.io/T1K)
+[![Go Reference](https://pkg.go.dev/badge/github.com/enerplanet/T1K.svg)](https://pkg.go.dev/github.com/enerplanet/T1K)
 
-[![MkDocs](https://github.com/THD-Spatial-AI/github-template/actions/workflows/docs.yml/badge.svg)](https://thd-spatial-ai.github.io/github-template)
+T1K converts one JSON structure into another, driven by a declarative mapping
+configuration, and converts the result back again. It is a Go package with a
+command-line tool, has no dependencies beyond the Go standard library, and
+ships with the mapping that turns an [EnerPlanET](https://github.com/enerplanet/enerplanet)
+calculation payload into a [MEME](https://github.com/enerplanet/meme) job.
 
-This repository is a template for projects under the `THD-Spatial-AI` GitHub group. It provides a basic structure, documentation, and guidance to help you prepare repositories for internal collaboration and open-source release.
+**Documentation:** [enerplanet.github.io/T1K](https://enerplanet.github.io/T1K)
 
-## What this template includes
+## How it works
 
-- `README.md` (project overview and usage guidance)
-- `CONTRIBUTING.md` (contribution workflow and expectations)
-- `LICENSE` (required before making a repository public)
-- `docs/` (documentation pages for naming conventions and open-source readiness)
-- `mkdocs.yml` (MkDocs configuration for documentation site generation)
-- `ATTRIBUTIONS.md` (third-party attribution, if applicable)
-- `CITATION.cff` (citation metadata for research projects)
+A mapping is a JSON file of rules. Each rule pairs a path in the source
+document with a path in the target document; the same rule is read forwards by
+`Transform` and backwards by `Reverse`, so one configuration gives both
+directions.
 
-## Before making a repository public
+```json
+{
+  "name": "orders-to-invoices",
+  "rules": [
+    {"from": "order.number", "to": "invoice.reference"},
+    {"from": "order.total_cents", "to": "invoice.total", "convert": {"linear": {"divisor": 100}}},
+    {"to": "invoice.currency", "value": "EUR"},
+    {
+      "each": {"from": "order.lines[$i]", "to": "invoice.items{line_$i}"},
+      "rules": [
+        {"from": "sku", "to": "article"},
+        {"from": "qty", "to": "quantity", "convert": "number"}
+      ]
+    }
+  ]
+}
+```
 
-Use the open-source readiness checklist before publishing a repository under `THD-Spatial-AI`.
+Paths address object keys, array elements and object entries; variables such
+as `$i` iterate on one side and are substituted on the other, which is what
+lets a rule turn an array into a keyed object and back. Converters are
+invertible (`linear`, `lookup`, `datetime`, `number`, `string`, `absent`), and
+`each` groups nested rules relative to a pair of elements. The
+[configuration reference](https://enerplanet.github.io/T1K/configuration/overview/)
+describes every construct.
 
-- **Checklist:** [Open Source Checklist](docs/getting-started/open-source-checklist.md)
+## Installation
 
-The checklist covers:
+```bash
+go install github.com/enerplanet/T1K/cmd/t1k@latest   # the command
+go get github.com/enerplanet/T1K                       # the package
+```
 
-- essential repository files (license, README, contributing, code of conduct)
-- Git LFS setup for large files
-- optional but recommended files
-- final review steps before publication
+Go 1.23 or newer is required. `make build` produces `bin/t1k` from a clone.
 
-## Repository naming
+## Command line
 
-All repositories under `THD-Spatial-AI` should follow a consistent naming convention.
+```bash
+# EnerPlanET calculation payload -> MEME job, with the embedded mapping
+t1k -in examples/enerplanet-calculation.json -out meme-job.json
 
-- **Guidelines:** [Repository Naming Guidelines](docs/getting-started/repository-naming.md)
+# and back again
+t1k -reverse -in meme-job.json -out calculation.json
 
-## Required files for public repositories
+# any other mapping, reading standard input and writing standard output
+cat input.json | t1k -config my-mapping.json > output.json
+```
 
-> [!IMPORTANT]
-> Repositories under `THD-Spatial-AI` must include the following files before being made public. See the [Open Source Checklist](docs/getting-started/open-source-checklist.md) for the full list.
+| Flag | Meaning |
+|---|---|
+| `-config FILE` | mapping configuration; without it the embedded EnerPlanET to MEME mapping is used |
+| `-in FILE`, `-out FILE` | input and output documents; default standard input and output |
+| `-reverse` | apply the reverse transformation |
+| `-compact` | compact instead of indented output |
+| `-print-config` | print the embedded mapping, as a starting point for your own |
+| `-version` | print the version |
 
-| File | Requirement | Purpose |
-|------|-------------|---------|
-| `LICENSE` | Required | Legal permission for use, modification, and distribution ([Choose a License](https://choosealicense.com/)) |
-| `README.md` | Required | Project overview, setup, and usage instructions |
-| `CONTRIBUTING.md` | Required for community repos | Issue reporting, PR process, coding standards |
-| `CODE_OF_CONDUCT.md` | Required for community repos | Community expectations ([Contributor Covenant](https://www.contributor-covenant.org/)) |
-| `ATTRIBUTIONS.md` | Required if applicable | Third-party credits when using assets that require attribution |
-| `CITATION.cff` | Recommended for research | Machine-readable citation metadata ([Citation File Format](https://citation-file-format.github.io/)) |
-| `.gitattributes` | Required if using LFS | Git LFS tracking for large files ([Git LFS docs](https://git-lfs.com/)) |
+Exit status 1 reports an invalid configuration, input or a failing rule (the
+message names the rule and the direction); 2 reports a usage error.
 
-### Optional but useful files
+## Go package
 
-- `CHANGELOG.md` — track notable changes
-- `CODEOWNERS` — define review ownership
-- `.github/ISSUE_TEMPLATE/` — issue templates
-- `.github/pull_request_template.md` — PR template
-- `SECURITY.md` — vulnerability reporting policy
-- `SUPPORT.md` — support and contact guidance
+```go
+import t1k "github.com/enerplanet/T1K"
 
-## Documentation (MkDocs)
+task := t1k.NewTransformTask()          // the embedded EnerPlanET -> MEME mapping
+memeJob, err := task.Transform(payload) // payload: the calculation JSON
+back, err := task.Reverse(memeJob)
 
-This template uses [MkDocs](https://www.mkdocs.org/) with [Material for MkDocs](https://squidfunk.github.io/mkdocs-material/) for project documentation. Source files are in `docs/`.
+cfg, err := t1k.LoadConfigFile("my-mapping.json")
+custom := t1k.NewTransformTask(t1k.WithConfig(cfg), t1k.WithIndent("", "  "))
+```
 
-For setup instructions (local development, GitHub Pages deployment, and workflow configuration), see the [Documentation Setup Guide](docs/getting-started/documentation-setup.md).
+The default configuration is parsed when the package initialises. A
+`TransformTask` carries no per-call state, so tasks can run in parallel; the
+intended pattern is one task per conversion job. Errors wrap `ErrConfig`,
+`ErrInput` or `ErrRule` for `errors.Is`.
 
-> [!CAUTION]
-> **TO ALL MAINTAINERS:** Please review the [open-source readiness checklist](docs/getting-started/open-source-checklist.md) and ensure all required files are included before making a repository public.
->
-> This template is intended to be practical and easy to adapt. Keep it lightweight, take some time to remove sections you do not need **(Including this one)**, and update links/paths if you rename files in `docs/`.
+## The EnerPlanET to MEME mapping
+
+[`config/enerplanet-to-meme.json`](config/enerplanet-to-meme.json) maps the
+payload EnerPlanET sends to its simulation webservice onto MEME's canonical
+model: every topology feature becomes a node, every connection a transmission
+arc, buildings get a demand technology from their annual consumption, attached
+technologies (`pv_supply`, `battery_storage`, ...) become MEME technologies
+with kW converted to MW, and transformers become the grid connection. The
+[mapping page](https://enerplanet.github.io/T1K/mappings/enerplanet-to-meme/)
+lists every field, the unit conversions and what the reverse restores.
+[`examples/`](examples/) holds a payload and the job it produces.
+
+## Development
+
+```bash
+make test        # go test ./...
+make test-race   # with the race detector, shuffled
+make lint        # go vet + golangci-lint
+make example     # convert examples/enerplanet-calculation.json both ways
+```
+
+Golden files under `testdata/` pin the default mapping's output; refresh them
+with `make golden-update` after a deliberate change. See
+[CONTRIBUTING.md](CONTRIBUTING.md) for the workflow and the commit convention.
+
+## License
+
+[MIT](LICENSE). Copyright (c) 2026 BigGeoData & Spatial AI, Technische Hochschule Deggendorf.

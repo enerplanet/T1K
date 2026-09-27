@@ -1,17 +1,23 @@
-# CITATION.cff — Update this file with your project's citation information.
-# See https://citation-file-format.github.io/ for the full specification.
-
 cff-version: 1.2.0
-title: "Project Title"
+title: "T1K"
 message: "If you use this software, please cite it as below."
 type: software
 authors:
-  - family-names: "Last Name"
-    given-names: "First Name"
-    orcid: "https://orcid.org/0000-0000-0000-0000"
+  - family-names: "Weber"
+    given-names: "Andreas Willibald"
     affiliation: "BigGeoData & Spatial AI, Technische Hochschule Deggendorf"
-repository-code: "https://github.com/THD-Spatial-AI/github-template"
-url: "https://THD-Spatial-AI.github.io/github-template"
+repository-code: "https://github.com/enerplanet/T1K"
+url: "https://enerplanet.github.io/T1K"
+abstract: >-
+  A Go package and command line tool that converts one JSON structure into
+  another with a declarative, reversible mapping configuration; ships with the
+  mapping from an EnerPlanET calculation payload to a MEME job.
+keywords:
+  - json
+  - transformation
+  - energy-system-modelling
+  - enerplanet
+  - meme
 license: MIT
 version: "0.1.0"
-date-released: "2026-01-01"
+date-released: "2026-09-27"
