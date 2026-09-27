@@ -808,6 +808,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#fuzzing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fuzzing
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#golden-files" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1001,10 +1012,13 @@
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>make<span class="w"> </span>test-race<span class="w">   </span><span class="c1"># go test -race -shuffle=on ./...</span>
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>make<span class="w"> </span>lint<span class="w">        </span><span class="c1"># go vet + golangci-lint (v2, configuration in .golangci.yml)</span>
 </span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>make<span class="w"> </span>cover<span class="w">       </span><span class="c1"># coverage summary</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>make<span class="w"> </span>fuzz<span class="w">        </span><span class="c1"># every fuzz target, FUZZTIME each (default 30s)</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>make<span class="w"> </span>bench<span class="w">       </span><span class="c1"># benchmarks of Transform and Reverse on the example</span>
 </span></code></pre></div>
 <p>CI runs lint, the race tests, a build, a conversion of the example in both
-directions and <code>govulncheck</code> on every push and pull request, and it builds
-the containerized environment and runs the race tests and lint inside it.</p>
+directions, a ten-second fuzz smoke of every target and <code>govulncheck</code> on
+every push and pull request, and it builds the containerized environment and
+runs the race tests and lint inside it.</p>
 <h2 id="in-a-container">In a container<a class="headerlink" href="#in-a-container" title="Permanent link">&para;</a></h2>
 <p><code>environment/</code> provides the same targets inside a Docker image with the
 toolchain CI uses (see the folder's README):</p>
@@ -1023,27 +1037,31 @@ toolchain CI uses (see the folder's README):</p>
 <tbody>
 <tr>
 <td><code>internal/jsondoc/jsondoc_test.go</code></td>
-<td>decoding with exact digits, encoding, deep copies, structural equality, number parsing and formatting, type names</td>
+<td>decoding with exact digits, encoding (and what cannot be encoded), deep copies, structural equality, Go and JSON numbers, non-finite text, number formatting at the edges, type names</td>
 </tr>
 <tr>
 <td><code>internal/jsonpath/path_test.go</code></td>
-<td>parsing of every path form and its error messages, key template matching and rendering, matching with bound and unbound variables, concrete locations, reads and writes, compaction</td>
+<td>parsing of every path form and its error messages, the <code>String()</code> round trip, key template matching and rendering, matching with bound and unbound variables (leading zeros, out-of-range and non-integer bindings, errors inside iterations), concrete locations, reads and writes through holes and wrong containers, compaction</td>
 </tr>
 <tr>
 <td><code>internal/convert/convert_test.go</code></td>
-<td>every converter forward and back (each case is run both ways), argument validation, chains</td>
+<td>every converter forward and back (each case is run both ways), argument and type validation, absent inputs, chains and their error propagation, zone rendering, non-finite text, structural lookups</td>
 </tr>
 <tr>
 <td><code>internal/mapping/compile_test.go</code></td>
-<td>a valid configuration with every construct, and one case per validation error with the message it must produce</td>
+<td>a valid configuration with every construct, unusual but valid shapes, bind ordering and join detection, and one case per validation error with the message and the rule position it must produce</td>
 </tr>
 <tr>
 <td><code>internal/mapping/run_test.go</code></td>
-<td>table cases for copy rules, constants and templates, arrays and keyed objects, <code>each</code> in iterate and join mode, nested scopes, conditions, defaults, error reporting and the no-aliasing guarantee; each case checks forward and reverse</td>
+<td>table cases for copy rules, constants and templates, arrays and keyed objects, <code>each</code> in iterate and join mode, nested scopes, every condition operator, defaults, roots and nulls, and every runtime error path with its rule position and direction; each case checks forward and reverse</td>
 </tr>
 <tr>
 <td><code>pkg/t1k/t1k_test.go</code>, <code>pkg/t1k/config_test.go</code></td>
 <td>the public API, golden files for the default mapping, the round-trip property, the concurrency guarantee, error classification</td>
+</tr>
+<tr>
+<td><code>pkg/t1k/mapping_test.go</code></td>
+<td>the default mapping's behaviour for every technology kind, payload edge cases (no topology, standalone buildings, zero demand and rating, resolutions, infinity spellings), values it must reject, the reverse of jobs T1K did not produce, the round trip over a payload with every kind, and degenerate inputs</td>
 </tr>
 <tr>
 <td><code>config/config_test.go</code></td>
@@ -1055,6 +1073,18 @@ toolchain CI uses (see the folder's README):</p>
 </tr>
 </tbody>
 </table>
+<h2 id="fuzzing">Fuzzing<a class="headerlink" href="#fuzzing" title="Permanent link">&para;</a></h2>
+<p>Every parser and the transformation itself have a fuzz target next to their
+tests: <code>FuzzParse</code> and <code>FuzzParseTemplate</code> in <code>jsonpath</code> (no expression
+panics, accepted ones round-trip through <code>String()</code>, rendered keys match
+their template), <code>FuzzParse</code> in <code>convert</code> (no spec panics, parsed converters
+survive representative inputs in both directions), <code>FuzzCompile</code> and
+<code>FuzzRun</code> in <code>mapping</code> (no configuration or document panics, every failure
+wraps <code>ErrConfig</code> or <code>ErrRule</code>) and <code>FuzzTransform</code> in <code>pkg/t1k</code> (the
+default mapping never panics on any input in either direction). <code>go test</code>
+runs their seed corpora; <code>make fuzz</code> explores for <code>FUZZTIME</code> per target and
+CI runs a short smoke. A crasher lands in <code>testdata/fuzz/</code> of the package;
+commit it as a regression case once fixed.</p>
 <h2 id="golden-files">Golden files<a class="headerlink" href="#golden-files" title="Permanent link">&para;</a></h2>
 <p><code>pkg/t1k/testdata/meme-job.golden.json</code> and
 <code>pkg/t1k/testdata/enerplanet-reverse.golden.json</code> are the outputs of the default mapping for <code>examples/enerplanet-calculation.json</code>
@@ -1104,7 +1134,7 @@ once the placeholders the mapping documents (<code>country</code>, ...) are fill
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="September 27, 2026 22:29:02 UTC">September 27, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="September 27, 2026 22:47:44 UTC">September 27, 2026</span>
   </span>
 
     
