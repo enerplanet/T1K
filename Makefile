@@ -51,7 +51,7 @@ bench: ## Run the benchmarks of the public API
 	go test -run '^$$' -bench . -benchmem ./pkg/t1k
 
 golden-update: ## Rewrite the golden files after a deliberate change to the default mapping
-	go test -run 'TestDefaultMappingGolden' -update ./pkg/t1k
+	go test -run 'TestDefaultMappingGolden' ./pkg/t1k -update
 
 example: build ## Convert the example payload both ways into examples/
 	./bin/$(BINARY) -in examples/enerplanet-calculation.json -out examples/meme-job.json
