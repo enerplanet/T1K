@@ -108,6 +108,29 @@ errors. Reverse requires a string that starts with the prefix and ends with
 the suffix, and fails otherwise; with `strict` false such a value passes
 through unchanged. An empty value is wrapped and unwrapped like any other.
 
+## match
+
+A guard that changes nothing and fails when the value does not match a
+pattern:
+
+```json
+{"match": {"pattern": "[^_\\d]\\w*"}}
+```
+
+The pattern uses Go regular expression syntax and is anchored to the whole
+value, so `[a-z]+` and `^[a-z]+$` mean the same. The guard applies in both
+directions. Numbers and booleans are matched by their text; `null` and
+containers have no text and fail. An invalid pattern is rejected when the
+configuration is loaded.
+
+Use `match` to turn a constraint of the target system, such as an identifier
+syntax, into an error that names the rule, instead of a rejection downstream.
+Chained after `affix`, it checks the wrapped value:
+
+```json
+{"from": "from.id", "to": "from", "convert": [{"affix": {"prefix": "n"}}, {"match": {"pattern": "[^_\\d]\\w*"}}]}
+```
+
 ## absent
 
 Treats the listed values as *not present*, in both directions:

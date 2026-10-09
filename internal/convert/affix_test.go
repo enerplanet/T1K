@@ -96,8 +96,13 @@ func TestAffixArguments(t *testing.T) {
 func TestAffixInChains(t *testing.T) {
 	runConvCases(t, []convCase{
 		{name: "lookup then affix", spec: `[{"lookup": {"pairs": [[60, "h"]]}}, {"affix": {"prefix": "every_"}}]`, in: `60`, want: `"every_h"`},
+		{name: "affix then match", spec: `[{"affix": {"prefix": "n"}}, {"match": {"pattern": "[^_\\d]\\w*"}}]`, in: `"1"`, want: `"n1"`},
 		{name: "absent then affix leaves absence alone", spec: `[{"absent": {"values": ["inf"]}}, {"affix": {"prefix": "n"}}]`, in: `"inf"`, want: "", back: absentMark},
 	})
+	c := mustConv(t, `[{"affix": {"prefix": "n"}}, {"match": {"pattern": "[^_\\d]\\w*"}}]`)
+	if _, _, err := c.Forward("-x", true); err == nil || !strings.Contains(err.Error(), `match: "n-x" does not match`) {
+		t.Errorf("guard after affix = %v", err)
+	}
 }
 
 // FuzzAffix checks the round-trip property for arbitrary strings and

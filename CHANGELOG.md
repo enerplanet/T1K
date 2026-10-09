@@ -27,7 +27,8 @@ with the keys concerned.
 ### Added
 
 - The `affix` converter wraps a value in a prefix and/or suffix and strips
-  it again in reverse.
+  it again in reverse; the `match` guard fails a transformation when a
+  value does not match a pattern, in both directions.
 - The T1K identity: the banner on the README and the docs landing page
   (light and dark), the mark as the docs logo and the kit's favicon; the
   artwork lives under `docs/assets/logos/`.

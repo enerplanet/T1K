@@ -185,7 +185,7 @@ func TestConverterSpecErrors(t *testing.T) {
 
 func TestConverterNames(t *testing.T) {
 	names := Names()
-	want := "absent, affix, datetime, identity, linear, lookup, number, string"
+	want := "absent, affix, datetime, identity, linear, lookup, match, number, string"
 	if got := strings.Join(names, ", "); got != want {
 		t.Fatalf("converterNames = %q, want %q", got, want)
 	}

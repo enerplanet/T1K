@@ -44,7 +44,7 @@ Paths address object keys, array elements and object entries; variables such
 as `$i` iterate on one side and are substituted on the other, which is what
 lets a rule turn an array into a keyed object and back. Converters are
 invertible (`linear`, `lookup`, `datetime`, `number`, `string`, `absent`,
-`affix`), and
+`affix`, `match`), and
 `each` groups nested rules relative to a pair of elements. The
 [configuration reference](https://enerplanet.github.io/T1K/configuration/overview/)
 describes every construct.

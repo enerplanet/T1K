@@ -45,6 +45,7 @@ var factories = map[string]factory{
 	"datetime": newDatetime,
 	"absent":   newAbsent,
 	"affix":    newAffix,
+	"match":    newMatch,
 }
 
 // Identity passes values through unchanged; it is the converter of a rule
