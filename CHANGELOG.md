@@ -8,6 +8,8 @@ with the keys concerned.
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-10-09
+
 ### Fixed
 
 - The default mapping produces identifiers Calliope 0.7 accepts
@@ -68,3 +70,6 @@ with the keys concerned.
   tests, lint, the docs server, the `t1k` command and a shell, selected with
   `ENV=dev|test`; the root Makefile passes `env-<target>` through to it and
   CI runs the suite inside the image.
+
+[Unreleased]: https://github.com/enerplanet/T1K/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/enerplanet/T1K/releases/tag/v0.1.0

@@ -18,5 +18,5 @@ authors:
 repository-code: "https://github.com/enerplanet/T1K"
 url: "https://enerplanet.github.io/T1K"
 license: MIT
-version: "0.1.0-alpha"
-date-released: "2026-09-27"
+version: "0.1.0"
+date-released: "2026-10-09"
