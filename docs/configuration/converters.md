@@ -88,6 +88,26 @@ that zone. Parts a layout does not carry (fractions of a second, the time of
 day with `DateOnly`) are lost on the way, which is the one place this
 converter is not exact.
 
+## affix
+
+Wraps a value in literal text:
+
+```json
+{"affix": {"prefix": "n", "suffix": "", "strict": true}}
+```
+
+Forward renders `prefix + value + suffix` as a string; reverse strips both
+again. At least one of `prefix` and `suffix` is required. `affix` is the
+value-side counterpart of a key template such as `{n$k}`: where an
+identifier travels as a value rather than as a key, for example a node id
+copied into a reference, `affix` keeps it consistent with the wrapped key.
+
+Forward accepts any scalar and always yields a string, so a number comes
+back from the reverse as the text of its digits; `null` and containers are
+errors. Reverse requires a string that starts with the prefix and ends with
+the suffix, and fails otherwise; with `strict` false such a value passes
+through unchanged. An empty value is wrapped and unwrapped like any other.
+
 ## absent
 
 Treats the listed values as *not present*, in both directions:
