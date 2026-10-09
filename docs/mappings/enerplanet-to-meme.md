@@ -28,13 +28,24 @@ define.
 ## Decisions
 
 - **A node per feature, an arc per connection.** Every building and
-  transformer becomes a node keyed by its feature `id` (`1`, `trafo_2585`);
-  every connection becomes a bidirectional transmission arc keyed by pipe
-  kind and position (`lv_0`, `mv_2`) with the length as `distance`. The
-  topology is therefore preserved exactly and the reverse can rebuild it.
-  (The translator on EnerPlanET's `feature/heat-integration` branch instead
-  sums buildings into one node per transformer area; that aggregation cannot
-  be inverted, so T1K keeps the features.)
+  transformer becomes a node keyed by its feature `id` with the prefix `n`
+  (`n1`, `ntrafo_2585`); every connection becomes a bidirectional
+  transmission arc keyed by pipe kind and position (`lv_0`, `mv_2`) with the
+  length as `distance`. The topology is therefore preserved exactly and the
+  reverse can rebuild it. (The translator on EnerPlanET's
+  `feature/heat-integration` branch instead sums buildings into one node per
+  transformer area; that aggregation cannot be inverted, so T1K keeps the
+  features.)
+- **Identifiers that Calliope accepts.** Calliope 0.7 requires identifiers to
+  match `^[^_^\d][\w]*$`: no leading digit or underscore, and only letters,
+  digits and `_`. EnerPlanET numbers its buildings, so node ids get the
+  prefix `n`, and every generated key joins its parts with `_`
+  (`demand_1`, `pv_supply_1`, `grid_trafo_2585`, `households_1`). The
+  node references copied into transmission arcs get the same prefix through
+  the `affix` converter and are checked by a `match` guard, so an id that
+  cannot be made valid fails the transformation rather than MEME's Calliope
+  target. The reverse strips the prefix, so EnerPlanET's ids come back
+  unchanged. This answers [issue #1](https://github.com/enerplanet/T1K/issues/1).
 - **The transformer is the grid connection.** As in the simulation engine,
   which attaches a `transformer_supply` technology capped by the rated power,
   each transformer gets a `trade` entry importing at most its rating (kVA as
@@ -52,6 +63,31 @@ define.
   EUR/MWh (`ensure_feasibility` with `bigM: 1e6`).
 - **Electricity only.** Heat demand (`demand_heat`) is carried by no rule;
   the reverse writes 0.
+
+## Identifiers
+
+MEME accepts letters, digits, `.`, `_` and `-` in identifiers, but its
+Calliope target applies Calliope's stricter rule, `^[^_^\d][\w]*$`. The
+mapping therefore generates every key and reference as follows:
+
+| EnerPlanET | MEME key | MEME references |
+|---|---|---|
+| building id `1` | node `n1` | `node: "n1"` in its technologies and trades; `from`/`to: "n1"` in arcs |
+| transformer id `trafo_2585` | node `ntrafo_2585` | `node: "ntrafo_2585"` in its trade; `from`/`to` in arcs |
+| demand of building `1` | technology `demand_1` | |
+| `techs.pv_supply` of building `1` | technology `pv_supply_1` | |
+| `techs.households_supply` of building `1` | trade `households_1` | |
+| transformer `trafo_2585` rating | trade `grid_trafo_2585` | |
+| connection at position 0 with pipe `lv` | arc `lv_0` | |
+
+The prefix comes from the key template `model.nodes{n$k}` and the templates
+`n$k` of the `node` references; the references copied from the topology
+(`from.id`, `to.id`) get it through the `affix` converter followed by a
+`match` guard. An id that is still invalid after the prefix, for example one
+containing a hyphen, fails the transformation with the rule named. The
+reverse strips the prefix, so EnerPlanET's ids return unchanged; a job that
+references nodes without the prefix is rejected by the reverse rather than
+guessed at.
 
 ## Field mapping
 
@@ -80,14 +116,14 @@ with `$p` bound to `pipe`:
 | EnerPlanET | MEME | Conversion |
 |---|---|---|
 | `pipe` | the key prefix (`lv_`, `mv_`) | bind |
-| `from.id`, `to.id` | `from`, `to` | copy |
+| `from.id`, `to.id` | `from`, `to` | `affix` prefix `n`, then `match` against Calliope's identifier syntax |
 | `length` (km) | `distance` | `number` |
 | | `carrier`, `bidirectional`, `capacity` | constants `electricity`, `true`, `{"expandable": true}` |
 
 ### Features
 
-Each `topology[$i].from` and `topology[$i].to` becomes `model.nodes{$k}` with
-`$k` bound to the feature `id`; a transformer referenced by several
+Each `topology[$i].from` and `topology[$i].to` becomes `model.nodes{n$k}`
+with `$k` bound to the feature `id`; a transformer referenced by several
 connections is written once.
 
 | EnerPlanET | MEME | Conversion |
@@ -95,18 +131,19 @@ connections is written once.
 | `id` | the node key | bind |
 | `geometry.coordinates[0]`, `[1]` | `coords.lon`, `coords.lat` | `number` |
 | `properties.osm_id` | `name` | copy |
-| `properties.demand_energy` (kWh/a, when > 0) | `technologies{demand-$k}` with `role` `demand`, `carrier_in` `electricity`, `demand_profile` in MW | ÷ 8 760 000, rounded |
-| `properties.rated_power` (kVA, transformers) | `trade{grid-$k}` with `import.limit` in MW, `import.price` 300, `export` | kW→MW |
+| `properties.demand_energy` (kWh/a, when > 0) | `technologies{demand_$k}` with `role` `demand`, `node` `n$k`, `carrier_in` `electricity`, `demand_profile` in MW | ÷ 8 760 000, rounded |
+| `properties.rated_power` (kVA, transformers) | `trade{grid_$k}` with `node` `n$k`, `import.limit` in MW, `import.price` 300, `export` | kW→MW |
 | `type`, `geometry.type`, `techs`, `custom_demand_timeseries`, `properties.id`, `session_id`, `created_at`, `modified_at`, `f_class_demands`, `demand_heat` | none | reverse constants: `Feature`, `Point`, `null`, `null`, the key, `""`, `null`, `null`, `null`, `0` |
-| `properties.feature_type`, `type`, `f_class`, `demand_profile`, `area` | none | reverse: `BasePOI`, `residential`, `residential`, `residential`, `0` for a node without a `grid-*` trade; `TopologyNode`, `transformer`, `null` area for one with |
+| `properties.feature_type`, `type`, `f_class`, `demand_profile`, `area` | none | reverse: `BasePOI`, `residential`, `residential`, `residential`, `0` for a node without a `grid_*` trade; `TopologyNode`, `transformer`, `null` area for one with |
 
 `residential` is EnerPlanET's own fallback when a building has no usage
 class.
 
 ### Technologies
 
-`techs.<key>` of a feature becomes `technologies{<key>-$k}` (or
-`trade{...-$k}` for the grid tariffs), with `node` set to the feature's key.
+`techs.<key>` of a feature becomes `technologies{<key>_$k}` (or
+`trade{..._$k}` for the grid tariffs), with `node` set to `n$k`, the
+feature's node key.
 The shared rules, applied to every supply technology and the battery:
 
 | EnerPlanET (kW, kWh, EUR) | MEME (MW, MWh, EUR) | Conversion |
@@ -132,7 +169,7 @@ Per technology:
 | `battery_storage` | storage | `cont_energy_eff`→`storage.charge_eff` and `.discharge_eff`; `cont_storage_cap_max`/`_min`→`storage.energy_capacity.max`/`.min` (kWh→MWh, inf→absent); `cont_storage_loss`→`self_discharge`; `cont_storage_initial`→`initial_soc`; `cont_storage_discharge_depth`→`depth_of_discharge`; `cost_storage_cap`→`investment_per_energy_capacity` (×1000); `energy_capacity.expandable` `true` |
 | `wind_onshore` | supply, `performance` physics `wind` | `hub_height`, `rotor_diameter`, `nominal_power`, `turbine_id`→`params.*` |
 | `biomass_supply`, `geothermal_supply`, `water_supply` | supply | shared rules and `efficiency` only |
-| `households_supply`, `non_households_supply` | `trade{households-$k}`, `trade{non_households-$k}` | `cost_om_con`→`import.price` (×1000); `cont_energy_cap_max`→`import.limit` (inf→absent, kW→MW) |
+| `households_supply`, `non_households_supply` | `trade{households_$k}`, `trade{non_households_$k}` | `cost_om_con`→`import.price` (×1000); `cont_energy_cap_max`→`import.limit` (inf→absent, kW→MW) |
 
 ### Not carried
 
@@ -160,8 +197,9 @@ gates then apply:
 
 `t1k -reverse` rebuilds the calculation payload from a job. Everything the
 tables above mark as a copy or conversion comes back exactly (numbers to
-their digits, kWh rounded to whole numbers); the reverse constants restore
-the payload's required keys with the placeholders listed. Two limits:
+their digits, kWh rounded to whole numbers, node ids with their prefix
+stripped); the reverse constants restore the payload's required keys with the
+placeholders listed. Three limits:
 
 - A building without a connection has a node and a demand but no
   transmission arc, so the reverse has nowhere to place it in `topology`; it
@@ -169,6 +207,9 @@ the payload's required keys with the placeholders listed. Two limits:
 - `user_id`, `session_id`, `callback_url`, `country` and `lkr` are not in a
   MEME job; the reverse writes empty strings, and the caller must set them
   (the simulation engine's schema requires a non-empty `country`).
+- A transformer whose rating is 0 gets no grid trade, and the reverse, which
+  tells transformers from buildings by that trade, restores it as a
+  building.
 
 `examples/` holds the payload, the job and the reverse output;
 `pkg/t1k/testdata/` pins both directions, and the tests check that converting the reverse output
@@ -180,6 +221,9 @@ forward again reproduces the job apart from the standalone building.
 Typical edits: change the tariff constants, drop the unmet-demand rule for
 PyPSA, replace the constant demand by a series (`demand_profile` naming a
 `model.timeseries` entry), or add rules for further building properties.
+To change the node prefix, edit it in the three places that agree on it: the
+key template `model.nodes{n$k}` of the two node rules, the `n$k` templates of
+the `node` references, and the `affix` prefix of the arc references.
 `t1k -config my-mapping.json` runs the edited copy; the
 [configuration reference](../configuration/overview.md) describes every
 construct.

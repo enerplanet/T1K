@@ -122,71 +122,71 @@ func TestMappingTechnologyKinds(t *testing.T) {
 	}
 	out := transform(t, payload(connection(building("1", 3745, techs), trafo("trafo_9", 160), 0.05, "lv")))
 	tech := func(name string) map[string]any {
-		return lookup(t, out, "model.technologies."+name+"-1").(map[string]any)
+		return lookup(t, out, "model.technologies."+name+"_1").(map[string]any)
 	}
 
 	pv := tech("pv_supply")
-	if pv["role"] != "supply" || pv["node"] != "1" || pv["carrier_out"] != "electricity" {
+	if pv["role"] != "supply" || pv["node"] != "n1" || pv["carrier_out"] != "electricity" {
 		t.Errorf("pv essentials = %v", pv)
 	}
-	expectNumber(t, out, "model.technologies.pv_supply-1.capacity.max", 0.008)
-	expectNumber(t, out, "model.technologies.pv_supply-1.costs.monetary.investment_per_capacity", 575000)
-	expectNumber(t, out, "model.technologies.pv_supply-1.costs.monetary.fixed_om", 8000)
-	expectNumber(t, out, "model.technologies.pv_supply-1.performance.params.tilt", 35)
-	expectNumber(t, out, "model.technologies.pv_supply-1.performance.params.loss", 0.14)
-	expectNumber(t, out, "model.technologies.pv_supply-1.native.calliope.flow_out_parasitic_eff", 1)
-	if lookup(t, out, "model.technologies.pv_supply-1.performance.model") != "pv" {
+	expectNumber(t, out, "model.technologies.pv_supply_1.capacity.max", 0.008)
+	expectNumber(t, out, "model.technologies.pv_supply_1.costs.monetary.investment_per_capacity", 575000)
+	expectNumber(t, out, "model.technologies.pv_supply_1.costs.monetary.fixed_om", 8000)
+	expectNumber(t, out, "model.technologies.pv_supply_1.performance.params.tilt", 35)
+	expectNumber(t, out, "model.technologies.pv_supply_1.performance.params.loss", 0.14)
+	expectNumber(t, out, "model.technologies.pv_supply_1.native.calliope.flow_out_parasitic_eff", 1)
+	if lookup(t, out, "model.technologies.pv_supply_1.performance.model") != "pv" {
 		t.Error("pv performance model")
 	}
-	expectAbsent(t, out, "model.technologies.pv_supply-1.performance.params.system_capacity")
+	expectAbsent(t, out, "model.technologies.pv_supply_1.performance.params.system_capacity")
 
 	battery := tech("battery_storage")
 	if battery["role"] != "storage" || battery["carrier_in"] != "electricity" {
 		t.Errorf("battery essentials = %v", battery)
 	}
-	expectNumber(t, out, "model.technologies.battery_storage-1.storage.energy_capacity.max", 8.8893)
-	expectNumber(t, out, "model.technologies.battery_storage-1.storage.energy_capacity.min", 0.01)
-	expectNumber(t, out, "model.technologies.battery_storage-1.storage.charge_eff", 0.97)
-	expectNumber(t, out, "model.technologies.battery_storage-1.storage.discharge_eff", 0.97)
-	expectNumber(t, out, "model.technologies.battery_storage-1.storage.self_discharge", 0.01)
-	expectNumber(t, out, "model.technologies.battery_storage-1.storage.initial_soc", 0.5)
-	expectNumber(t, out, "model.technologies.battery_storage-1.storage.depth_of_discharge", 0.1)
-	expectNumber(t, out, "model.technologies.battery_storage-1.costs.monetary.investment_per_energy_capacity", 1007930)
-	expectAbsent(t, out, "model.technologies.battery_storage-1.costs.monetary.fixed_om_fraction")
-	expectAbsent(t, out, "model.technologies.battery_storage-1.efficiency")
+	expectNumber(t, out, "model.technologies.battery_storage_1.storage.energy_capacity.max", 8.8893)
+	expectNumber(t, out, "model.technologies.battery_storage_1.storage.energy_capacity.min", 0.01)
+	expectNumber(t, out, "model.technologies.battery_storage_1.storage.charge_eff", 0.97)
+	expectNumber(t, out, "model.technologies.battery_storage_1.storage.discharge_eff", 0.97)
+	expectNumber(t, out, "model.technologies.battery_storage_1.storage.self_discharge", 0.01)
+	expectNumber(t, out, "model.technologies.battery_storage_1.storage.initial_soc", 0.5)
+	expectNumber(t, out, "model.technologies.battery_storage_1.storage.depth_of_discharge", 0.1)
+	expectNumber(t, out, "model.technologies.battery_storage_1.costs.monetary.investment_per_energy_capacity", 1007930)
+	expectAbsent(t, out, "model.technologies.battery_storage_1.costs.monetary.fixed_om_fraction")
+	expectAbsent(t, out, "model.technologies.battery_storage_1.efficiency")
 
 	wind := tech("wind_onshore")
-	if lookup(t, out, "model.technologies.wind_onshore-1.performance.model") != "wind" {
+	if lookup(t, out, "model.technologies.wind_onshore_1.performance.model") != "wind" {
 		t.Error("wind performance model")
 	}
-	expectNumber(t, out, "model.technologies.wind_onshore-1.performance.params.hub_height", 80)
-	expectNumber(t, out, "model.technologies.wind_onshore-1.performance.params.turbine_id", 61)
-	expectNumber(t, out, "model.technologies.wind_onshore-1.capacity.max", 12)
+	expectNumber(t, out, "model.technologies.wind_onshore_1.performance.params.hub_height", 80)
+	expectNumber(t, out, "model.technologies.wind_onshore_1.performance.params.turbine_id", 61)
+	expectNumber(t, out, "model.technologies.wind_onshore_1.capacity.max", 12)
 	if wind["efficiency"] == nil {
 		t.Error("wind efficiency")
 	}
 
 	for _, name := range []string{"biomass_supply", "geothermal_supply", "water_supply"} {
-		if tech(name)["role"] != "supply" || tech(name)["node"] != "1" {
+		if tech(name)["role"] != "supply" || tech(name)["node"] != "n1" {
 			t.Errorf("%s essentials = %v", name, tech(name))
 		}
 		expectAbsent(t, out, "model.technologies."+name+"-1.performance")
 	}
-	expectNumber(t, out, "model.technologies.biomass_supply-1.costs.monetary.variable_om", 96)
-	expectAbsent(t, out, "model.technologies.biomass_supply-1.feedstock_type")
-	expectNumber(t, out, "model.technologies.water_supply-1.costs.monetary.variable_om", -61.6)
-	expectAbsent(t, out, "model.technologies.water_supply-1.lifetime")
+	expectNumber(t, out, "model.technologies.biomass_supply_1.costs.monetary.variable_om", 96)
+	expectAbsent(t, out, "model.technologies.biomass_supply_1.feedstock_type")
+	expectNumber(t, out, "model.technologies.water_supply_1.costs.monetary.variable_om", -61.6)
+	expectAbsent(t, out, "model.technologies.water_supply_1.lifetime")
 
-	expectNumber(t, out, "model.trade.households-1.import.price", 394.3)
-	expectAbsent(t, out, "model.trade.households-1.import.limit")
-	expectNumber(t, out, "model.trade.non_households-1.import.limit", 0.5)
-	expectNumber(t, out, "model.trade.non_households-1.import.price", 235.9)
-	if lookup(t, out, "model.trade.households-1.node") != "1" || lookup(t, out, "model.trade.households-1.carrier") != "electricity" {
+	expectNumber(t, out, "model.trade.households_1.import.price", 394.3)
+	expectAbsent(t, out, "model.trade.households_1.import.limit")
+	expectNumber(t, out, "model.trade.non_households_1.import.limit", 0.5)
+	expectNumber(t, out, "model.trade.non_households_1.import.price", 235.9)
+	if lookup(t, out, "model.trade.households_1.node") != "n1" || lookup(t, out, "model.trade.households_1.carrier") != "electricity" {
 		t.Error("household trade essentials")
 	}
-	expectNumber(t, out, "model.trade.grid-trafo_9.import.limit", 0.16)
-	expectNumber(t, out, "model.trade.grid-trafo_9.import.price", 300)
-	if _, ok := lookup(t, out, "model.trade.grid-trafo_9.export").(map[string]any); !ok {
+	expectNumber(t, out, "model.trade.grid_trafo_9.import.limit", 0.16)
+	expectNumber(t, out, "model.trade.grid_trafo_9.import.price", 300)
+	if _, ok := lookup(t, out, "model.trade.grid_trafo_9.export").(map[string]any); !ok {
 		t.Error("transformer export block")
 	}
 }
@@ -195,12 +195,12 @@ func TestMappingInfinityIsCaseInsensitiveAndNormalised(t *testing.T) {
 	techs := map[string]any{"pv_supply": map[string]any{"cont_energy_cap_max": "Inf", "cont_energy_cap_max_systemwide": "INF", "cost_om_annual_investment_fraction": 0.02, "cost_om_annual": 8}}
 	in := payload(connection(building("1", 100, techs), trafo("t", 100), 1, "lv"))
 	out := transform(t, in)
-	expectAbsent(t, out, "model.technologies.pv_supply-1.capacity.max")
-	expectAbsent(t, out, "model.technologies.pv_supply-1.capacity.systemwide_max")
+	expectAbsent(t, out, "model.technologies.pv_supply_1.capacity.max")
+	expectAbsent(t, out, "model.technologies.pv_supply_1.capacity.systemwide_max")
 	// A non-zero fraction is carried even next to fixed_om; MEME, not T1K,
 	// rejects the combination.
-	expectNumber(t, out, "model.technologies.pv_supply-1.costs.monetary.fixed_om_fraction", 0.02)
-	expectNumber(t, out, "model.technologies.pv_supply-1.costs.monetary.fixed_om", 8000)
+	expectNumber(t, out, "model.technologies.pv_supply_1.costs.monetary.fixed_om_fraction", 0.02)
+	expectNumber(t, out, "model.technologies.pv_supply_1.costs.monetary.fixed_om", 8000)
 
 	back := reverseOf(t, out)
 	pv := lookup(t, back, "topology").([]any)[0].(map[string]any)["from"].(map[string]any)["techs"].(map[string]any)["pv_supply"].(map[string]any)
@@ -245,10 +245,10 @@ func TestMappingPayloadEdgeCases(t *testing.T) {
 		out := transform(t, payload(map[string]any{"from": building("7", 500, nil)}))
 		expectAbsent(t, out, "model.transmission")
 		expectAbsent(t, out, "model.trade")
-		if _, ok := lookup(t, out, "model.nodes.7").(map[string]any); !ok {
+		if _, ok := lookup(t, out, "model.nodes.n7").(map[string]any); !ok {
 			t.Error("standalone building node")
 		}
-		expectNumber(t, out, "model.technologies.demand-7.demand_profile", 0.000057078)
+		expectNumber(t, out, "model.technologies.demand_7.demand_profile", 0.000057078)
 		if _, ok := reverseOf(t, out)["topology"]; ok {
 			t.Error("a standalone building cannot be placed back into the topology")
 		}
@@ -281,7 +281,7 @@ func TestMappingPayloadEdgeCases(t *testing.T) {
 		b := building("1", 100, map[string]any{})
 		out := transform(t, payload(connection(b, trafo("t", 100), 1, "lv")))
 		for name := range out["model"].(map[string]any)["technologies"].(map[string]any) {
-			if !strings.HasPrefix(name, "demand-") {
+			if !strings.HasPrefix(name, "demand_") {
 				t.Errorf("unexpected technology %s from empty techs", name)
 			}
 		}
@@ -326,14 +326,14 @@ func TestMappingReverseOfForeignJobs(t *testing.T) {
 			"model": map[string]any{
 				"metadata": map[string]any{"name": "m"}, "time": map[string]any{"start": "2018-01-01T00:00:00Z", "end": "2018-01-02T00:00:00Z", "resolution": "1H"},
 				"carriers":     map[string]any{"electricity": map[string]any{}},
-				"nodes":        map[string]any{"a": map[string]any{"name": "A", "coords": map[string]any{"lat": 1, "lon": 2}}},
+				"nodes":        map[string]any{"na": map[string]any{"name": "A", "coords": map[string]any{"lat": 1, "lon": 2}}},
 				"transmission": transmission,
 			},
 			"experiment": map[string]any{"mode": "plan", "solver": map[string]any{"name": "highs"}},
 		}
 	}
 	t.Run("keys that do not fit the template are skipped", func(t *testing.T) {
-		back := reverseOf(t, job(map[string]any{"line-a": map[string]any{"from": "a", "to": "b"}, "lv_0": map[string]any{"from": "a", "to": "b", "distance": 1}}))
+		back := reverseOf(t, job(map[string]any{"line-a": map[string]any{"from": "na", "to": "nb"}, "lv_0": map[string]any{"from": "na", "to": "nb", "distance": 1}}))
 		topo := lookup(t, back, "topology").([]any)
 		if len(topo) != 1 {
 			t.Fatalf("topology = %v", topo)
@@ -342,16 +342,26 @@ func TestMappingReverseOfForeignJobs(t *testing.T) {
 		if conn["pipe"] != "lv" || conn["from"].(map[string]any)["properties"].(map[string]any)["osm_id"] != "A" {
 			t.Errorf("connection = %v", conn)
 		}
-		// The node "b" is referenced but not defined: the element keeps only
-		// what the transmission gave it.
+		// The node "nb" is referenced but not defined: the element keeps only
+		// the id the transmission gave it, with the prefix stripped.
 		if to := conn["to"].(map[string]any); to["id"] != "b" || to["properties"] != nil {
 			t.Errorf("undefined node reverses to its id alone: %v", to)
 		}
 	})
 	t.Run("a key with a non-numeric position is an error", func(t *testing.T) {
-		data, _ := json.Marshal(job(map[string]any{"lv_x": map[string]any{"from": "a", "to": "b"}}))
+		data, _ := json.Marshal(job(map[string]any{"lv_x": map[string]any{"from": "na", "to": "nb"}}))
 		_, err := NewTransformTask().Reverse(data)
 		if err == nil || !errors.Is(err, ErrRule) || !strings.Contains(err.Error(), "not an array index") {
+			t.Errorf("error = %v", err)
+		}
+	})
+	t.Run("a node reference without the prefix is an error", func(t *testing.T) {
+		// A job T1K did not produce may reference nodes without the prefix;
+		// such an id cannot be mapped back to EnerPlanET, and the reverse
+		// says so instead of guessing.
+		data, _ := json.Marshal(job(map[string]any{"lv_0": map[string]any{"from": "a", "to": "nb"}}))
+		_, err := NewTransformTask().Reverse(data)
+		if err == nil || !errors.Is(err, ErrRule) || !strings.Contains(err.Error(), `from: affix: "a" does not carry the prefix "n"`) {
 			t.Errorf("error = %v", err)
 		}
 	})

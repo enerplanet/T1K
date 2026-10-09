@@ -10,6 +10,15 @@ with the keys concerned.
 
 ### Fixed
 
+- The default mapping produces identifiers Calliope 0.7 accepts
+  ([#1](https://github.com/enerplanet/T1K/issues/1)): node keys carry the
+  prefix `n` (`n1`, `ntrafo_2585`), technology and trade keys join their
+  parts with `_` (`demand_1`, `grid_trafo_2585`), and the node references
+  copied into transmission arcs are prefixed and checked the same way. The
+  reverse strips the prefix, so EnerPlanET's ids come back unchanged. Jobs
+  produced by earlier versions use the old keys; the mapping's `version` is
+  now 1.1.0.
+
 - A key template containing invalid UTF-8 made the path parser panic; it is
   an error now. Templates also match object keys that contain newlines.
 

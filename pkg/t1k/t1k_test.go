@@ -87,8 +87,8 @@ func TestDefaultMappingRoundTrip(t *testing.T) {
 	}
 	want := mustDecode(t, string(meme)).(map[string]any)
 	model := want["model"].(map[string]any)
-	delete(model["nodes"].(map[string]any), "4")
-	delete(model["technologies"].(map[string]any), "demand-4")
+	delete(model["nodes"].(map[string]any), "n4")
+	delete(model["technologies"].(map[string]any), "demand_4")
 	if got := mustDecode(t, string(again)); !jsondoc.Equal(got, want) {
 		t.Errorf("second forward pass differs beyond the standalone building:\n%s", again)
 	}
@@ -127,22 +127,22 @@ func TestDefaultMappingContent(t *testing.T) {
 	if len(m.Nodes) != 6 {
 		t.Errorf("nodes = %d, want 6 (four buildings, two transformers)", len(m.Nodes))
 	}
-	for _, key := range []string{"pv_supply-1", "battery_storage-1", "demand-1", "demand-2", "demand-3", "demand-4"} {
+	for _, key := range []string{"pv_supply_1", "battery_storage_1", "demand_1", "demand_2", "demand_3", "demand_4"} {
 		if _, ok := m.Technologies[key]; !ok {
 			t.Errorf("technology %q missing", key)
 		}
 	}
-	if _, ok := m.Technologies["demand-trafo_2585"]; ok {
+	if _, ok := m.Technologies["demand_trafo_2585"]; ok {
 		t.Error("a transformer must not get a demand technology")
 	}
-	pv := m.Technologies["pv_supply-1"]
-	if pv["node"] != "1" || pv["role"] != "supply" {
+	pv := m.Technologies["pv_supply_1"]
+	if pv["node"] != "n1" || pv["role"] != "supply" {
 		t.Errorf("pv tech = %v", pv)
 	}
 	if cap := pv["capacity"].(map[string]any); cap["max"] != 0.008 || cap["expandable"] != true {
 		t.Errorf("pv capacity = %v (kW must become MW)", cap)
 	}
-	if _, ok := m.Technologies["battery_storage-1"]["storage"]; !ok {
+	if _, ok := m.Technologies["battery_storage_1"]["storage"]; !ok {
 		t.Error("battery needs a storage block")
 	}
 	for _, key := range []string{"lv_0", "lv_1", "mv_2", "lv_3"} {
@@ -153,11 +153,11 @@ func TestDefaultMappingContent(t *testing.T) {
 	if len(m.Transmission) != 4 {
 		t.Errorf("transmission = %d arcs, want 4 (the standalone building has none)", len(m.Transmission))
 	}
-	grid := m.Trade["grid-trafo_2585"]
-	if grid == nil || grid["node"] != "trafo_2585" || grid["import"].(map[string]any)["limit"] != 0.16 {
+	grid := m.Trade["grid_trafo_2585"]
+	if grid == nil || grid["node"] != "ntrafo_2585" || grid["import"].(map[string]any)["limit"] != 0.16 {
 		t.Errorf("transformer trade = %v", grid)
 	}
-	if _, ok := m.Trade["non_households-2"]; !ok {
+	if _, ok := m.Trade["non_households_2"]; !ok {
 		t.Error("the supermarket's tariff trade is missing")
 	}
 	if job.Experiment["mode"] != "plan" {

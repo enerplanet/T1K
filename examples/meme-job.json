@@ -22,42 +22,42 @@
       "name": "158_1790500000"
     },
     "nodes": {
-      "1": {
+      "n1": {
         "coords": {
           "lat": 52.10148,
           "lon": 6.02745
         },
         "name": "268428040"
       },
-      "2": {
+      "n2": {
         "coords": {
           "lat": 52.10171,
           "lon": 6.02801
         },
         "name": "268428101"
       },
-      "3": {
+      "n3": {
         "coords": {
           "lat": 52.10341,
           "lon": 6.03088
         },
         "name": "268429377"
       },
-      "4": {
+      "n4": {
         "coords": {
           "lat": 52.09877,
           "lon": 6.04011
         },
         "name": "268431250"
       },
-      "trafo_2585": {
+      "ntrafo_2585": {
         "coords": {
           "lat": 52.101322357,
           "lon": 6.027322234
         },
         "name": "Trafo_2585"
       },
-      "trafo_2590": {
+      "ntrafo_2590": {
         "coords": {
           "lat": 52.10355,
           "lon": 6.03102
@@ -66,7 +66,7 @@
       }
     },
     "technologies": {
-      "battery_storage-1": {
+      "battery_storage_1": {
         "capacity": {
           "expandable": true,
           "max": 8.715
@@ -82,7 +82,7 @@
         },
         "interest_rate": 0.02,
         "lifetime": 11,
-        "node": "1",
+        "node": "n1",
         "role": "storage",
         "storage": {
           "charge_eff": 0.97,
@@ -95,31 +95,31 @@
           "self_discharge": 0
         }
       },
-      "demand-1": {
+      "demand_1": {
         "carrier_in": "electricity",
         "demand_profile": 0.000427511,
-        "node": "1",
+        "node": "n1",
         "role": "demand"
       },
-      "demand-2": {
+      "demand_2": {
         "carrier_in": "electricity",
         "demand_profile": 0.014611872,
-        "node": "2",
+        "node": "n2",
         "role": "demand"
       },
-      "demand-3": {
+      "demand_3": {
         "carrier_in": "electricity",
         "demand_profile": 0.00239726,
-        "node": "3",
+        "node": "n3",
         "role": "demand"
       },
-      "demand-4": {
+      "demand_4": {
         "carrier_in": "electricity",
         "demand_profile": 0.00109589,
-        "node": "4",
+        "node": "n4",
         "role": "demand"
       },
-      "pv_supply-1": {
+      "pv_supply_1": {
         "capacity": {
           "expandable": true,
           "max": 0.008,
@@ -140,7 +140,7 @@
             "flow_out_parasitic_eff": 1.0
           }
         },
-        "node": "1",
+        "node": "n1",
         "performance": {
           "model": "pv",
           "params": {
@@ -159,30 +159,30 @@
       "start": "2018-01-01T00:00:00Z"
     },
     "trade": {
-      "grid-trafo_2585": {
+      "grid_trafo_2585": {
         "carrier": "electricity",
         "export": {},
         "import": {
           "limit": 0.16,
           "price": 300
         },
-        "node": "trafo_2585"
+        "node": "ntrafo_2585"
       },
-      "grid-trafo_2590": {
+      "grid_trafo_2590": {
         "carrier": "electricity",
         "export": {},
         "import": {
           "limit": 0.25,
           "price": 300
         },
-        "node": "trafo_2590"
+        "node": "ntrafo_2590"
       },
-      "non_households-2": {
+      "non_households_2": {
         "carrier": "electricity",
         "import": {
           "price": 235.9
         },
-        "node": "2"
+        "node": "n2"
       }
     },
     "transmission": {
@@ -193,8 +193,8 @@
         },
         "carrier": "electricity",
         "distance": 0.0182,
-        "from": "1",
-        "to": "trafo_2585"
+        "from": "n1",
+        "to": "ntrafo_2585"
       },
       "lv_1": {
         "bidirectional": true,
@@ -203,8 +203,8 @@
         },
         "carrier": "electricity",
         "distance": 0.0621,
-        "from": "2",
-        "to": "trafo_2585"
+        "from": "n2",
+        "to": "ntrafo_2585"
       },
       "lv_3": {
         "bidirectional": true,
@@ -213,8 +213,8 @@
         },
         "carrier": "electricity",
         "distance": 0.0247,
-        "from": "3",
-        "to": "trafo_2590"
+        "from": "n3",
+        "to": "ntrafo_2590"
       },
       "mv_2": {
         "bidirectional": true,
@@ -223,8 +223,8 @@
         },
         "carrier": "electricity",
         "distance": 0.412,
-        "from": "trafo_2585",
-        "to": "trafo_2590"
+        "from": "ntrafo_2585",
+        "to": "ntrafo_2590"
       }
     }
   }

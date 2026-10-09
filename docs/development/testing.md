@@ -35,6 +35,7 @@ make -C environment check ENV=test   # race tests and lint, no test cache
 | `internal/mapping/compile_test.go` | a valid configuration with every construct, unusual but valid shapes, bind ordering and join detection, and one case per validation error with the message and the rule position it must produce |
 | `internal/mapping/run_test.go` | table cases for copy rules, constants and templates, arrays and keyed objects, `each` in iterate and join mode, nested scopes, every condition operator, defaults, roots and nulls, and every runtime error path with its rule position and direction; each case checks forward and reverse |
 | `pkg/t1k/t1k_test.go`, `pkg/t1k/config_test.go` | the public API, golden files for the default mapping, the round-trip property, the concurrency guarantee, error classification |
+| `pkg/t1k/calliope_test.go` | the regression test for [issue #1](https://github.com/enerplanet/T1K/issues/1): every generated key and reference satisfies Calliope's identifier syntax, every reference resolves, the reverse restores EnerPlanET's ids, and an id the prefix cannot repair fails with the rule named |
 | `pkg/t1k/mapping_test.go` | the default mapping's behaviour for every technology kind, payload edge cases (no topology, standalone buildings, zero demand and rating, resolutions, infinity spellings), values it must reject, the reverse of jobs T1K did not produce, the round trip over a payload with every kind, and degenerate inputs |
 | `config/config_test.go` | the default mapping is embedded and is JSON |
 | `cmd/t1k/main_test.go` | flags, files, standard streams, exit codes and error messages |
@@ -45,7 +46,8 @@ Every parser and the transformation itself have a fuzz target next to their
 tests: `FuzzParse` and `FuzzParseTemplate` in `jsonpath` (no expression
 panics, accepted ones round-trip through `String()`, rendered keys match
 their template), `FuzzParse` in `convert` (no spec panics, parsed converters
-survive representative inputs in both directions), `FuzzCompile` and
+survive representative inputs in both directions) and `FuzzAffix` (the
+`affix` round trip holds for arbitrary prefixes, suffixes and values), `FuzzCompile` and
 `FuzzRun` in `mapping` (no configuration or document panics, every failure
 wraps `ErrConfig` or `ErrRule`) and `FuzzTransform` in `pkg/t1k` (the
 default mapping never panics on any input in either direction). `go test`
