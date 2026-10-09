@@ -633,6 +633,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#input-and-output" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Input and output
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#exit-status" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1032,7 +1043,10 @@
 
 <h1 id="command-line">Command line<a class="headerlink" href="#command-line" title="Permanent link">&para;</a></h1>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>t1k [-config FILE] [-reverse] [-in FILE] [-out FILE] [-compact]
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>t1k -print-config
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>t1k -version
 </span></code></pre></div>
+<p>The command converts one JSON document with a mapping configuration.</p>
 <table>
 <thead>
 <tr>
@@ -1043,7 +1057,7 @@
 <tbody>
 <tr>
 <td><code>-config FILE</code></td>
-<td>the mapping configuration; without it the embedded EnerPlanET to MEME mapping is used</td>
+<td>the mapping configuration to apply; without it, the embedded EnerPlanET to MEME mapping is used</td>
 </tr>
 <tr>
 <td><code>-in FILE</code></td>
@@ -1055,7 +1069,7 @@
 </tr>
 <tr>
 <td><code>-reverse</code></td>
-<td>apply the reverse transformation (target structure to source structure)</td>
+<td>apply the reverse direction: from the target structure back to the source structure</td>
 </tr>
 <tr>
 <td><code>-compact</code></td>
@@ -1063,7 +1077,7 @@
 </tr>
 <tr>
 <td><code>-print-config</code></td>
-<td>print the embedded mapping and exit, as a starting point for a custom one</td>
+<td>print the embedded mapping and exit, as a starting point for a custom one (<code>-config</code> is ignored)</td>
 </tr>
 <tr>
 <td><code>-version</code></td>
@@ -1071,12 +1085,19 @@
 </tr>
 <tr>
 <td><code>-h</code>, <code>-help</code></td>
-<td>print the usage</td>
+<td>print the usage and exit</td>
 </tr>
 </tbody>
 </table>
-<p>The output always ends with a newline. Object keys are written in sorted
-order (see <a href="../../configuration/overview/#evaluation-model">the evaluation model</a>).</p>
+<h2 id="input-and-output">Input and output<a class="headerlink" href="#input-and-output" title="Permanent link">&para;</a></h2>
+<ul>
+<li>With <code>-in</code>, standard input is not read. With <code>-out</code>, the file is created
+  or overwritten; nothing is written to standard output.</li>
+<li>The output always ends with a newline, so it can be concatenated or
+  appended to a log.</li>
+<li>Object keys are written in sorted order, and numbers that were only moved
+  keep their digits (see the <a href="../../configuration/overview/#evaluation-model">evaluation model</a>).</li>
+</ul>
 <h2 id="exit-status">Exit status<a class="headerlink" href="#exit-status" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
@@ -1096,17 +1117,19 @@ order (see <a href="../../configuration/overview/#evaluation-model">the evaluati
 </tr>
 <tr>
 <td>2</td>
-<td>usage error: an unknown flag or a stray argument</td>
+<td>usage error: an unknown flag or a stray argument; the usage is printed</td>
 </tr>
 </tbody>
 </table>
-<p>A failing rule is reported with its position in the configuration and the
-direction, for example:</p>
+<p>A failing rule is reported with its position in the configuration, the
+direction and the path or converter that failed:</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>t1k: t1k: rule failed: rules[16].rules[5] (forward): length: number: string "far" is not numeric
 </span></code></pre></div>
 <p><code>rules[16].rules[5]</code> is the sixth nested rule of the seventeenth top-level
-rule; rules spliced in from a definition carry the definition's name, as in
-<code>rules[17].rules[0](definitions.feature)[3]</code>.</p>
+rule. Rules spliced in from a definition carry the definition's name, as in
+<code>rules[17].rules[0](definitions.feature)[3]</code>: the fourth rule of the
+definition <code>feature</code>, used by the first nested rule of the eighteenth
+top-level rule.</p>
 <h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">&para;</a></h2>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1"># forward and back with the embedded mapping</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>t1k<span class="w"> </span>-in<span class="w"> </span>calculation.json<span class="w"> </span>-out<span class="w"> </span>meme-job.json
@@ -1144,7 +1167,7 @@ yourself, pass <code>-ldflags "-X main.version=1.2.3"</code>.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="September 27, 2026 20:26:56 UTC">September 27, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="October 9, 2026 14:49:32 UTC">October 9, 2026</span>
   </span>
 
     

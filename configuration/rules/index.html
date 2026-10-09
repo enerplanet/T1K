@@ -1109,9 +1109,41 @@
 
 
 <h1 id="rules">Rules<a class="headerlink" href="#rules" title="Permanent link">&para;</a></h1>
-<p><code>rules</code> is a list; every entry is one of three kinds of rule, or a <code>use</code> of a
-definition. Rules apply in order and later rules overwrite earlier writes to
-the same path.</p>
+<p><code>rules</code> is a list. Every entry is one of three kinds of rule (copy, constant
+or <code>each</code>), or a <code>use</code> of a definition. Rules apply in the order written, and
+a later write to a path replaces an earlier one.</p>
+<table>
+<thead>
+<tr>
+<th>Kind</th>
+<th>Recognised by</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>copy</td>
+<td><code>from</code> and <code>to</code>, no <code>value</code> or <code>template</code></td>
+<td>move a value between the two sides, optionally converted</td>
+</tr>
+<tr>
+<td>constant</td>
+<td><code>value</code> or <code>template</code></td>
+<td>write a fixed value on one side</td>
+</tr>
+<tr>
+<td><code>each</code></td>
+<td><code>each</code></td>
+<td>apply nested rules to every element of a collection</td>
+</tr>
+<tr>
+<td>use</td>
+<td><code>use</code></td>
+<td>splice a named rule list from <code>definitions</code></td>
+</tr>
+</tbody>
+</table>
+<p>Every rule accepts <code>description</code>, free text that T1K ignores.</p>
 <h2 id="copy-rules">Copy rules<a class="headerlink" href="#copy-rules" title="Permanent link">&para;</a></h2>
 <div class="language-json highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="p">{</span><span class="nt">"from"</span><span class="p">:</span><span class="w"> </span><span class="s2">"cont_energy_cap_max"</span><span class="p">,</span><span class="w"> </span><span class="nt">"to"</span><span class="p">:</span><span class="w"> </span><span class="s2">"capacity.max"</span><span class="p">,</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w"> </span><span class="nt">"convert"</span><span class="p">:</span><span class="w"> </span><span class="p">[{</span><span class="nt">"absent"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"values"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"inf"</span><span class="p">]}},</span><span class="w"> </span><span class="p">{</span><span class="nt">"linear"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"divisor"</span><span class="p">:</span><span class="w"> </span><span class="mi">1000</span><span class="p">}}],</span>
@@ -1128,62 +1160,58 @@ the same path.</p>
 <tbody>
 <tr>
 <td><code>from</code></td>
-<td>path on the source side (read by Transform, written by Reverse)</td>
+<td>the path on the source side: read by the forward direction, written by the reverse</td>
 </tr>
 <tr>
 <td><code>to</code></td>
-<td>path on the target side (written by Transform, read by Reverse)</td>
+<td>the path on the target side: written by the forward direction, read by the reverse</td>
 </tr>
 <tr>
 <td><code>convert</code></td>
-<td>a <a href="../converters/">converter</a> or a list of them; Reverse runs them backwards</td>
+<td>a <a href="../converters/">converter</a> or a list of them, applied in order; the reverse direction runs them backwards</td>
 </tr>
 <tr>
 <td><code>default</code></td>
-<td>written to <code>to</code> by Transform when <code>from</code> is absent (or the converter made it absent)</td>
+<td>written to <code>to</code> by the forward direction when <code>from</code> is absent, or the converter made the value absent</td>
 </tr>
 <tr>
 <td><code>reverse_default</code></td>
-<td>written to <code>from</code> by Reverse when <code>to</code> is absent</td>
+<td>written to <code>from</code> by the reverse direction when <code>to</code> is absent</td>
 </tr>
 <tr>
 <td><code>when</code></td>
-<td><a href="#conditions">conditions</a></td>
-</tr>
-<tr>
-<td><code>description</code></td>
-<td>free text, ignored</td>
+<td><a href="#conditions">conditions</a> per direction</td>
 </tr>
 </tbody>
 </table>
 <p><code>from</code> and <code>to</code> must use the same variables, apart from those an enclosing
-<code>each</code> binds. A default only applies when the path is concrete (no unbound
-variables), because absence of an iterated path is simply zero matches.</p>
-<p>The value at the source path is copied as a whole: an object or array
-moves with everything inside it. Nothing is ever taken by reference; the
-output never shares memory with the input.</p>
+<code>each</code> binds. A default applies only when the path is concrete (no unbound
+variables), because the absence of an iterated path is simply zero matches.</p>
+<p>The value at the source path is copied as a whole: an object or array moves
+with everything inside it, and nothing is taken by reference.</p>
 <h2 id="constant-rules">Constant rules<a class="headerlink" href="#constant-rules" title="Permanent link">&para;</a></h2>
 <div class="language-json highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="p">{</span><span class="nt">"to"</span><span class="p">:</span><span class="w"> </span><span class="s2">"experiment.mode"</span><span class="p">,</span><span class="w"> </span><span class="nt">"value"</span><span class="p">:</span><span class="w"> </span><span class="s2">"plan"</span><span class="p">}</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="p">{</span><span class="nt">"from"</span><span class="p">:</span><span class="w"> </span><span class="s2">"geometry.type"</span><span class="p">,</span><span class="w"> </span><span class="nt">"value"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Point"</span><span class="p">}</span>
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="p">{</span><span class="nt">"to"</span><span class="p">:</span><span class="w"> </span><span class="s2">"node"</span><span class="p">,</span><span class="w"> </span><span class="nt">"template"</span><span class="p">:</span><span class="w"> </span><span class="s2">"$k"</span><span class="p">}</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="p">{</span><span class="nt">"to"</span><span class="p">:</span><span class="w"> </span><span class="s2">"node"</span><span class="p">,</span><span class="w"> </span><span class="nt">"template"</span><span class="p">:</span><span class="w"> </span><span class="s2">"n$k"</span><span class="p">}</span>
 </span></code></pre></div>
-<p>A constant has exactly one side. <code>to</code> constants are written by Transform,
-<code>from</code> constants by Reverse; the other direction ignores the rule. <code>value</code>
-may be any JSON value (<code>null</code>, an object, an array); <code>template</code> is a string
-with variables, substituted from the enclosing <code>each</code> bindings (<code>$k</code>, <code>${k}</code>,
-<code>$$</code> for a dollar sign).</p>
+<p>A constant has exactly one side. A constant with <code>to</code> is written by the
+forward direction, one with <code>from</code> by the reverse direction; the other
+direction ignores the rule. <code>value</code> may be any JSON value, including <code>null</code>,
+objects and arrays; <code>template</code> is a string in which <code>$k</code>, <code>${k}</code> and <code>$$</code>
+are substituted from the enclosing <code>each</code> bindings. A constant's path may use
+only variables an enclosing <code>each</code> binds.</p>
 <p>Constants are how the reverse direction restores what the forward direction
 cannot carry: declare the value a source field should have when its target
-counterpart does not exist. Put such constants <em>before</em> the copy rule for the
-same path, so a real value, when present, wins.</p>
+counterpart does not exist. Place such a constant <em>before</em> the copy rule for
+the same path, so a real value, when present, wins.</p>
 <h2 id="each-rules">Each rules<a class="headerlink" href="#each-rules" title="Permanent link">&para;</a></h2>
 <div class="language-json highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="p">{</span>
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">  </span><span class="nt">"each"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"from"</span><span class="p">:</span><span class="w"> </span><span class="s2">"topology[$i].from"</span><span class="p">,</span><span class="w"> </span><span class="nt">"to"</span><span class="p">:</span><span class="w"> </span><span class="s2">"model.nodes{$k}"</span><span class="p">,</span><span class="w"> </span><span class="nt">"bind"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"$k"</span><span class="p">:</span><span class="w"> </span><span class="s2">"id"</span><span class="p">}},</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">  </span><span class="nt">"each"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"from"</span><span class="p">:</span><span class="w"> </span><span class="s2">"topology[$i].from"</span><span class="p">,</span><span class="w"> </span><span class="nt">"to"</span><span class="p">:</span><span class="w"> </span><span class="s2">"model.nodes{n$k}"</span><span class="p">,</span><span class="w"> </span><span class="nt">"bind"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"$k"</span><span class="p">:</span><span class="w"> </span><span class="s2">"id"</span><span class="p">}},</span>
 </span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">  </span><span class="nt">"when"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"forward"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"path"</span><span class="p">:</span><span class="w"> </span><span class="s2">"properties.feature_type"</span><span class="p">,</span><span class="w"> </span><span class="nt">"equals"</span><span class="p">:</span><span class="w"> </span><span class="s2">"BasePOI"</span><span class="p">}},</span>
 </span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">  </span><span class="nt">"rules"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
 </span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">    </span><span class="p">{</span><span class="nt">"from"</span><span class="p">:</span><span class="w"> </span><span class="s2">"geometry.coordinates[1]"</span><span class="p">,</span><span class="w"> </span><span class="nt">"to"</span><span class="p">:</span><span class="w"> </span><span class="s2">"coords.lat"</span><span class="p">,</span><span class="w"> </span><span class="nt">"convert"</span><span class="p">:</span><span class="w"> </span><span class="s2">"number"</span><span class="p">},</span>
 </span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">    </span><span class="p">{</span><span class="nt">"from"</span><span class="p">:</span><span class="w"> </span><span class="s2">"properties.osm_id"</span><span class="p">,</span><span class="w"> </span><span class="nt">"to"</span><span class="p">:</span><span class="w"> </span><span class="s2">"name"</span><span class="p">},</span>
-</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="w">    </span><span class="p">{</span><span class="nt">"from"</span><span class="p">:</span><span class="w"> </span><span class="s2">"properties.demand_energy"</span><span class="p">,</span><span class="w"> </span><span class="nt">"to"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/model.technologies{demand-$k}.demand_profile"</span><span class="p">}</span>
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="w">    </span><span class="p">{</span><span class="nt">"from"</span><span class="p">:</span><span class="w"> </span><span class="s2">"properties.demand_energy"</span><span class="p">,</span><span class="w"> </span><span class="nt">"to"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/model.technologies{demand_$k}.demand_profile"</span><span class="p">}</span>
 </span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="w">  </span><span class="p">]</span>
 </span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="p">}</span>
 </span></code></pre></div>
@@ -1197,89 +1225,90 @@ same path, so a real value, when present, wins.</p>
 <tbody>
 <tr>
 <td><code>each.from</code></td>
-<td>path of the source elements</td>
+<td>the path of the source elements</td>
 </tr>
 <tr>
 <td><code>each.to</code></td>
-<td>path of the target elements</td>
+<td>the path of the target elements</td>
 </tr>
 <tr>
 <td><code>each.bind</code></td>
-<td>variables read from a value inside each source element (see below)</td>
+<td>variables read from values inside each source element (see <a href="#bind">bind</a>)</td>
 </tr>
 <tr>
 <td><code>rules</code></td>
-<td>rules applied to every pair of elements, with relative paths</td>
+<td>the rules applied to every pair of elements, with paths relative to the pair; may be omitted or empty</td>
 </tr>
 <tr>
 <td><code>when</code></td>
 <td><a href="#conditions">conditions</a>, evaluated per element</td>
 </tr>
-<tr>
-<td><code>description</code></td>
-<td>free text, ignored</td>
-</tr>
 </tbody>
 </table>
 <p>Inside the nested rules, relative paths start at the current element on each
-side; absolute paths (<code>/...</code>) start at the document root. Variables bound by
-the <code>each</code> (and by enclosing ones) are available in nested paths, templates
-and conditions.</p>
-<p>Forward, the elements of <code>each.from</code> are enumerated in the input and the
-nested rules write below <code>each.to</code>; reverse, the entries of <code>each.to</code> are
-enumerated and the nested rules write below <code>each.from</code>. An <code>each</code> whose
-paths have no variables applies its rules once, if the element exists, and
-not at all otherwise; that makes <code>each</code> the way to write a group of
-constants only when some source object is present.</p>
+side; absolute paths (<code>/...</code>) start at the document root. The variables bound
+by the <code>each</code>, and by enclosing ones, are available in nested paths,
+templates and conditions.</p>
+<p>In the forward direction the elements of <code>each.from</code> are enumerated in the
+source document and the nested rules write below <code>each.to</code>; in the reverse
+direction the entries of <code>each.to</code> are enumerated and the nested rules write
+below <code>each.from</code>. An <code>each</code> whose paths have no variables applies its rules
+once if the element exists and not at all otherwise, which makes it the way
+to write a group of constants only when a source object is present.</p>
 <h3 id="bind">bind<a class="headerlink" href="#bind" title="Permanent link">&para;</a></h3>
-<p><code>bind</code> maps a variable to a path read from each source element. The value
-must be a string, number or boolean and becomes the variable's binding; a
-missing value is an error, so the mapping does not silently drop elements.</p>
-<p>With <code>bind</code>, the target side can be keyed by a value rather than a position:
-<code>topology[$i].from</code> paired with <code>model.nodes{$k}</code> and <code>{"$k": "id"}</code> turns an
-array of features into an object keyed by their ids, and writes a feature
+<p><code>bind</code> maps variables to paths read from each source element:</p>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nt">"bind"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"$k"</span><span class="p">:</span><span class="w"> </span><span class="s2">"id"</span><span class="p">}</span>
+</span></code></pre></div>
+<p>The value at the path must be a string, number or boolean and becomes the
+variable's binding, as text; a missing or non-scalar value fails the rule,
+so a mapping never drops elements silently. A bind variable must be new (not
+bound by an enclosing <code>each</code> nor by <code>each.from</code>), must appear in <code>each.to</code>,
+and its path may use the variables the iteration binds.</p>
+<p>With <code>bind</code>, the target side can be keyed by a value instead of a position:
+<code>topology[$i].from</code> paired with <code>model.nodes{n$k}</code> and <code>{"$k": "id"}</code> turns
+an array of features into an object keyed by their ids, and writes a feature
 that appears several times only once.</p>
-<p>The reverse direction depends on whether the target side determines every
-variable of the source side:</p>
+<p>How the reverse direction enumerates depends on whether <code>each.to</code> determines
+every variable of <code>each.from</code>:</p>
 <ul>
 <li><strong>Iterate mode</strong>, when it does (<code>conns[$i]</code> with <code>arcs{${p}_$i}</code> and
-  <code>{"$p": "pipe"}</code>): the target entries are enumerated, the key is parsed,
-  and each bound variable is written back to its bind path (<code>pipe</code> gets
-  <code>lv</code>).</li>
-<li><strong>Join mode</strong>, when it does not (<code>topology[$i].from</code> with <code>model.nodes{$k}</code>:
-  <code>$i</code> is not in the key): the <code>each</code> looks at the source elements that
-  earlier rules have already created in the output, reads the bind path from
-  each (<code>id</code>), and fills the element from the matching target entry. Such a
-  rule must therefore come <em>after</em> the rules that create those elements and
-  their bind values; entries without a created element are not restored.</li>
+  <code>{"$p": "pipe"}</code>): the target entries are enumerated, each key is parsed,
+  and every bound variable is written back to its bind path as a string
+  (<code>pipe</code> gets <code>"lv"</code>).</li>
+<li><strong>Join mode</strong>, when it does not (<code>topology[$i].from</code> with
+  <code>model.nodes{n$k}</code>: <code>$i</code> is not in the key): the <code>each</code> looks at the source
+  elements that earlier rules have already created in the output, reads the
+  bind path from each of them (<code>id</code>), and fills the element from the matching
+  target entry. Such a rule must therefore come <em>after</em> the rules that create
+  those elements and their bind values; entries without a created element are
+  not restored.</li>
 </ul>
 <h3 id="nesting">Nesting<a class="headerlink" href="#nesting" title="Permanent link">&para;</a></h3>
 <p><code>each</code> rules nest. A nested <code>each</code> may address its own collections relative
 to the current element or, with absolute paths, elsewhere in the document,
-which is how per-element technologies can be collected into one top-level
-map:</p>
-<div class="language-json highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="p">{</span><span class="nt">"each"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"from"</span><span class="p">:</span><span class="w"> </span><span class="s2">"techs.pv_supply"</span><span class="p">,</span><span class="w"> </span><span class="nt">"to"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/model.technologies{pv_supply-$k}"</span><span class="p">},</span><span class="w"> </span><span class="nt">"rules"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="err">...</span><span class="p">]}</span>
+which is how per-element technologies are collected into one top-level map:</p>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="p">{</span><span class="nt">"each"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"from"</span><span class="p">:</span><span class="w"> </span><span class="s2">"techs.pv_supply"</span><span class="p">,</span><span class="w"> </span><span class="nt">"to"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/model.technologies{pv_supply_$k}"</span><span class="p">},</span><span class="w"> </span><span class="nt">"rules"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="err">...</span><span class="p">]}</span>
 </span></code></pre></div>
 <h2 id="definitions-and-use">Definitions and use<a class="headerlink" href="#definitions-and-use" title="Permanent link">&para;</a></h2>
-<p><code>definitions</code> holds named rule lists; <code>{"use": "name"}</code> splices one in
-place. The spliced rules are compiled where they are used, so they may rely
-on the variables bound at that place (a definition used inside an <code>each</code>
-over <code>model.nodes{$k}</code> may use <code>$k</code>), and the same definition can serve
-several <code>each</code> rules. A definition may use other definitions; cycles are
-rejected.</p>
+<p><code>definitions</code> holds named rule lists; <code>{"use": "name"}</code> splices one in place.
+The spliced rules are compiled where they are used, so they may rely on the
+variables bound at that place (a definition used inside an <code>each</code> over
+<code>model.nodes{n$k}</code> may use <code>$k</code>), and one definition can serve several <code>each</code>
+rules. A definition may use other definitions; cycles are rejected.</p>
 <h2 id="conditions">Conditions<a class="headerlink" href="#conditions" title="Permanent link">&para;</a></h2>
-<div class="language-json highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="nt">"when"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">  </span><span class="nt">"forward"</span><span class="p">:</span><span class="w"> </span><span class="p">[{</span><span class="nt">"path"</span><span class="p">:</span><span class="w"> </span><span class="s2">"feature_type"</span><span class="p">,</span><span class="w"> </span><span class="nt">"equals"</span><span class="p">:</span><span class="w"> </span><span class="s2">"TopologyNode"</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="nt">"path"</span><span class="p">:</span><span class="w"> </span><span class="s2">"rated_power"</span><span class="p">,</span><span class="w"> </span><span class="nt">"gt"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">}],</span>
-</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">  </span><span class="nt">"reverse"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"path"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/model.trade{grid-$k}"</span><span class="p">,</span><span class="w"> </span><span class="nt">"exists"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">}</span>
-</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="p">}</span>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="nt">"when"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">  </span><span class="nt">"forward"</span><span class="p">:</span><span class="w"> </span><span class="p">[{</span><span class="nt">"path"</span><span class="p">:</span><span class="w"> </span><span class="s2">"feature_type"</span><span class="p">,</span><span class="w"> </span><span class="nt">"equals"</span><span class="p">:</span><span class="w"> </span><span class="s2">"TopologyNode"</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="nt">"path"</span><span class="p">:</span><span class="w"> </span><span class="s2">"rated_power"</span><span class="p">,</span><span class="w"> </span><span class="nt">"gt"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">}],</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">  </span><span class="nt">"reverse"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"path"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/model.trade{grid_$k}"</span><span class="p">,</span><span class="w"> </span><span class="nt">"exists"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">}</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="p">}</span>
 </span></code></pre></div>
-<p><code>when</code> gates a rule per direction: <code>forward</code> applies to Transform, <code>reverse</code>
-to Reverse; a direction without conditions always applies. Each direction
-takes one condition or a list, all of which must hold. A condition names a
-<code>path</code>, evaluated against the <em>source</em> document of that direction, relative
-to the current element (for an <code>each</code>, the element itself), or absolute with
-<code>/</code>; it may use bound variables. Its remaining keys are operators, all of
-which must hold:</p>
+<p><code>when</code> gates a rule per direction: <code>forward</code> applies to the forward
+direction, <code>reverse</code> to the reverse direction, and a direction without
+conditions always applies. Each direction takes one condition or a list of
+conditions, all of which must hold. A condition names a <code>path</code>, evaluated
+against the <em>source</em> document of that direction, relative to the current
+element (for an <code>each</code>, the element itself) or absolute with <code>/</code>. The path
+may use bound variables and must address a single value. Its remaining keys
+are operators, all of which must hold:</p>
 <table>
 <thead>
 <tr>
@@ -1294,7 +1323,7 @@ which must hold:</p>
 </tr>
 <tr>
 <td><code>equals: v</code></td>
-<td>the value is present and equals <code>v</code> (numbers by value)</td>
+<td>the value is present and equals <code>v</code> (structurally; numbers by value)</td>
 </tr>
 <tr>
 <td><code>not_equals: v</code></td>
@@ -1306,13 +1335,13 @@ which must hold:</p>
 </tr>
 <tr>
 <td><code>gt</code>, <code>gte</code>, <code>lt</code>, <code>lte: n</code></td>
-<td>the value is a number in the relation to <code>n</code></td>
+<td>the value is a number in the given relation to <code>n</code>; a non-number never holds</td>
 </tr>
 </tbody>
 </table>
 <p>The forward conditions of an <code>each</code> run before its bind paths are read, so
 they may use the iteration variables but not the bound ones; reverse
-conditions have everything bound.</p>
+conditions have every variable bound.</p>
 
 
 
@@ -1335,7 +1364,7 @@ conditions have everything bound.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="September 27, 2026 20:26:56 UTC">September 27, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="October 9, 2026 14:49:32 UTC">October 9, 2026</span>
   </span>
 
     

@@ -1060,6 +1060,10 @@ toolchain CI uses (see the folder's README):</p>
 <td>the public API, golden files for the default mapping, the round-trip property, the concurrency guarantee, error classification</td>
 </tr>
 <tr>
+<td><code>pkg/t1k/calliope_test.go</code></td>
+<td>the regression test for <a href="https://github.com/enerplanet/T1K/issues/1">issue #1</a>: every generated key and reference satisfies Calliope's identifier syntax, every reference resolves, the reverse restores EnerPlanET's ids, and an id the prefix cannot repair fails with the rule named</td>
+</tr>
+<tr>
 <td><code>pkg/t1k/mapping_test.go</code></td>
 <td>the default mapping's behaviour for every technology kind, payload edge cases (no topology, standalone buildings, zero demand and rating, resolutions, infinity spellings), values it must reject, the reverse of jobs T1K did not produce, the round trip over a payload with every kind, and degenerate inputs</td>
 </tr>
@@ -1078,7 +1082,8 @@ toolchain CI uses (see the folder's README):</p>
 tests: <code>FuzzParse</code> and <code>FuzzParseTemplate</code> in <code>jsonpath</code> (no expression
 panics, accepted ones round-trip through <code>String()</code>, rendered keys match
 their template), <code>FuzzParse</code> in <code>convert</code> (no spec panics, parsed converters
-survive representative inputs in both directions), <code>FuzzCompile</code> and
+survive representative inputs in both directions) and <code>FuzzAffix</code> (the
+<code>affix</code> round trip holds for arbitrary prefixes, suffixes and values), <code>FuzzCompile</code> and
 <code>FuzzRun</code> in <code>mapping</code> (no configuration or document panics, every failure
 wraps <code>ErrConfig</code> or <code>ErrRule</code>) and <code>FuzzTransform</code> in <code>pkg/t1k</code> (the
 default mapping never panics on any input in either direction). <code>go test</code>
@@ -1134,7 +1139,7 @@ once the placeholders the mapping documents (<code>country</code>, ...) are fill
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="September 27, 2026 22:47:44 UTC">September 27, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="October 9, 2026 14:49:31 UTC">October 9, 2026</span>
   </span>
 
     

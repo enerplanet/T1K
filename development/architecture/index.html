@@ -1079,12 +1079,12 @@ direction, the input tree and an output tree that starts as an empty object;
 nothing is shared between calls, which is why a task can be used
 concurrently.</p>
 <h2 id="compilation">Compilation<a class="headerlink" href="#compilation" title="Permanent link">&para;</a></h2>
-<p><code>mapping.Compile</code> parses the JSON into a tree of <code>rule</code> values of three
-kinds: copy, constant and scope (<code>each</code>). One file compiles each kind
-(<code>compile.go</code> for copy and constant rules, <code>compile_scope.go</code> for scopes and
-their <code>bind</code>, <code>condition.go</code> for <code>when</code>), reading raw JSON through the
-<code>fields</code> helper so every mistake is reported with the field's name and the
-rule's position. Compilation resolves every path, key template, converter
+<p><code>mapping.Compile</code> parses the JSON into a tree of <code>rule</code> values (<code>rule.go</code>)
+of three kinds: copy, constant and scope (<code>each</code>). One file compiles each
+kind (<code>compile.go</code> for the document, definitions, copy and constant rules,
+<code>compile_scope.go</code> for scopes and their <code>bind</code>, <code>condition.go</code> for <code>when</code>),
+reading raw JSON through the <code>fields</code> helper (<code>fields.go</code>) so every mistake
+is reported with the field's name and the rule's position. Compilation resolves every path, key template, converter
 chain and condition once and checks the variable discipline that makes rules
 reversible:</p>
 <ul>
@@ -1116,9 +1116,12 @@ removes at the end.</p>
 <h2 id="converters">Converters<a class="headerlink" href="#converters" title="Permanent link">&para;</a></h2>
 <p>A converter implements <code>Forward</code> and <code>Reverse</code> over a <code>(value, present)</code>
 pair, so it can turn a value into absence and back. A chain runs its steps
-in order forward and backwards in reverse. Each converter lives in its own
-file; factories read their arguments through a strict reader that rejects
-unknown ones, so a misspelt argument fails at load time.</p>
+in order forward and backwards in reverse. The scalar converters
+(<code>identity</code>, <code>number</code>, <code>string</code>) share <code>scalar.go</code>; every other converter
+(<code>linear</code>, <code>lookup</code>, <code>datetime</code>, <code>absent</code>, <code>affix</code>, <code>match</code>) has a file of
+its own. Factories read their arguments through a strict reader
+(<code>args.go</code>) that rejects unknown ones, so a misspelt argument fails at load
+time.</p>
 <h2 id="principles">Principles<a class="headerlink" href="#principles" title="Permanent link">&para;</a></h2>
 <ul>
 <li><strong>Bidirectional by construction:</strong> there is one rule set and one engine;
@@ -1128,8 +1131,8 @@ unknown ones, so a misspelt argument fails at load time.</p>
   error, a value of the wrong type for a converter is.</li>
 <li><strong>Faithful documents:</strong> numbers keep their text, the input is never
   modified, the output never aliases the input.</li>
-<li><strong>Deterministic output:</strong> sorted keys, no exponent notation, stable
-  compaction.</li>
+<li><strong>Deterministic output:</strong> sorted keys, computed numbers in plain decimal
+  notation, stable compaction.</li>
 <li><strong>Small functions:</strong> every function does one thing and says so in its
   comment; the engine is a set of named steps, not one loop.</li>
 </ul>
@@ -1155,7 +1158,7 @@ unknown ones, so a misspelt argument fails at load time.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="September 27, 2026 22:29:02 UTC">September 27, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="October 9, 2026 14:49:32 UTC">October 9, 2026</span>
   </span>
 
     

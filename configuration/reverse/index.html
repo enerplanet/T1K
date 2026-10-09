@@ -754,10 +754,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#what-reverse-does-with-each-construct" class="md-nav__link">
+  <a href="#what-the-reverse-direction-does-with-each-construct" class="md-nav__link">
     <span class="md-ellipsis">
       
-        What Reverse does with each construct
+        What the reverse direction does with each construct
       
     </span>
   </a>
@@ -1071,15 +1071,15 @@
 
 <h1 id="the-reverse-direction">The reverse direction<a class="headerlink" href="#the-reverse-direction" title="Permanent link">&para;</a></h1>
 <p><code>Reverse</code> is not a second mapping: it is the same rules read from <code>to</code> to
-<code>from</code>. This page collects what that means and how to write a mapping whose
-reverse does what you expect.</p>
-<h2 id="what-reverse-does-with-each-construct">What Reverse does with each construct<a class="headerlink" href="#what-reverse-does-with-each-construct" title="Permanent link">&para;</a></h2>
+<code>from</code>. This page collects what that means for each construct and how to
+write a mapping whose reverse does what you expect.</p>
+<h2 id="what-the-reverse-direction-does-with-each-construct">What the reverse direction does with each construct<a class="headerlink" href="#what-the-reverse-direction-does-with-each-construct" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
 <tr>
 <th>Construct</th>
-<th>Forward</th>
-<th>Reverse</th>
+<th>Forward direction</th>
+<th>Reverse direction</th>
 </tr>
 </thead>
 <tbody>
@@ -1110,13 +1110,13 @@ reverse does what you expect.</p>
 </tr>
 <tr>
 <td><code>each</code></td>
-<td>enumerate <code>from</code> elements, write below <code>to</code></td>
-<td>enumerate <code>to</code> entries, write below <code>from</code> (or join, see below)</td>
+<td>enumerate the <code>from</code> elements, write below <code>to</code></td>
+<td>enumerate the <code>to</code> entries, write below <code>from</code>, or join (see below)</td>
 </tr>
 <tr>
 <td><code>bind</code></td>
-<td>read the variable from the element</td>
-<td>write the variable back (iterate mode) or read it from the created element (join mode)</td>
+<td>read the variable from the source element</td>
+<td>write the variable back to its path (iterate mode), or read it from the element earlier rules created (join mode)</td>
 </tr>
 <tr>
 <td><code>when.forward</code></td>
@@ -1129,53 +1129,63 @@ reverse does what you expect.</p>
 <td>gates the rule</td>
 </tr>
 <tr>
-<td>converter</td>
-<td>forward</td>
-<td>reverse, chains backwards</td>
+<td>converter chain</td>
+<td>steps in order</td>
+<td>steps backwards, each reversed</td>
 </tr>
 </tbody>
 </table>
 <h2 id="lossless-and-lossy">Lossless and lossy<a class="headerlink" href="#lossless-and-lossy" title="Permanent link">&para;</a></h2>
 <p>A copy rule with an invertible converter is lossless: the value comes back
-exactly (numbers to their digits, unless a converter computed them). Two
+exactly, numbers to their digits unless a converter computed them. Three
 things are lossy by nature:</p>
 <ul>
 <li>A source field with no counterpart on the target side is not carried.
-  Declare what Reverse should put there with a <code>from</code> constant or a
-  <code>reverse_default</code>, choosing a value that is honest about being a
-  placeholder, and document it.</li>
-<li>A converter that rounds, or a <code>datetime</code> layout that drops parts, loses
-  the digits or parts it does not keep.</li>
+  Declare what the reverse should put there with a <code>from</code> constant or a
+  <code>reverse_default</code>, choose a value that is honest about being a placeholder,
+  and document it.</li>
+<li>A converter that rounds, or a <code>datetime</code> layout that drops parts, loses the
+  digits or parts it does not keep.</li>
+<li>A value whose type the target cannot express comes back in the type the
+  target has: a number wrapped by <code>affix</code>, or bound to a variable and written
+  back in iterate mode, returns as a string.</li>
 </ul>
 <p>Everything else round-trips, and the shipped mapping's tests check exactly
 that: converting the reverse output forward again reproduces the job, and
 reversing that reproduces the reverse output.</p>
 <h2 id="patterns">Patterns<a class="headerlink" href="#patterns" title="Permanent link">&para;</a></h2>
+<p><strong>Wrapped identifiers.</strong> A key template wraps a key (<code>model.nodes{n$k}</code>);
+the <code>affix</code> converter does the same for the value that references it and
+strips the text again in reverse, so a prefix that makes an id valid for the
+target never leaks back into the source. A <code>match</code> guard behind it reports an
+id the prefix cannot repair:</p>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="p">{</span><span class="nt">"from"</span><span class="p">:</span><span class="w"> </span><span class="s2">"from.id"</span><span class="p">,</span><span class="w"> </span><span class="nt">"to"</span><span class="p">:</span><span class="w"> </span><span class="s2">"from"</span><span class="p">,</span><span class="w"> </span><span class="nt">"convert"</span><span class="p">:</span><span class="w"> </span><span class="p">[{</span><span class="nt">"affix"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"prefix"</span><span class="p">:</span><span class="w"> </span><span class="s2">"n"</span><span class="p">}},</span><span class="w"> </span><span class="p">{</span><span class="nt">"match"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"pattern"</span><span class="p">:</span><span class="w"> </span><span class="s2">"[^_\\d]\\w*"</span><span class="p">}}]}</span>
+</span></code></pre></div>
 <p><strong>Placeholder values.</strong> EnerPlanET's <code>"inf"</code> means "no bound" and has no
 MEME counterpart. Drop it forward with <code>absent</code>, restore it backwards with
 <code>reverse_default</code>:</p>
-<div class="language-json highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="p">{</span><span class="nt">"from"</span><span class="p">:</span><span class="w"> </span><span class="s2">"cont_energy_cap_max"</span><span class="p">,</span><span class="w"> </span><span class="nt">"to"</span><span class="p">:</span><span class="w"> </span><span class="s2">"capacity.max"</span><span class="p">,</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w"> </span><span class="nt">"convert"</span><span class="p">:</span><span class="w"> </span><span class="p">[{</span><span class="nt">"absent"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"values"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"inf"</span><span class="p">],</span><span class="w"> </span><span class="nt">"ignore_case"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">}},</span><span class="w"> </span><span class="p">{</span><span class="nt">"linear"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"divisor"</span><span class="p">:</span><span class="w"> </span><span class="mi">1000</span><span class="p">}}],</span>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w"> </span><span class="nt">"reverse_default"</span><span class="p">:</span><span class="w"> </span><span class="s2">"inf"</span><span class="p">}</span>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="p">{</span><span class="nt">"from"</span><span class="p">:</span><span class="w"> </span><span class="s2">"cont_energy_cap_max"</span><span class="p">,</span><span class="w"> </span><span class="nt">"to"</span><span class="p">:</span><span class="w"> </span><span class="s2">"capacity.max"</span><span class="p">,</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w"> </span><span class="nt">"convert"</span><span class="p">:</span><span class="w"> </span><span class="p">[{</span><span class="nt">"absent"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"values"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"inf"</span><span class="p">],</span><span class="w"> </span><span class="nt">"ignore_case"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">}},</span><span class="w"> </span><span class="p">{</span><span class="nt">"linear"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"divisor"</span><span class="p">:</span><span class="w"> </span><span class="mi">1000</span><span class="p">}}],</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w"> </span><span class="nt">"reverse_default"</span><span class="p">:</span><span class="w"> </span><span class="s2">"inf"</span><span class="p">}</span>
 </span></code></pre></div>
 <p><strong>Defaults before values.</strong> A <code>from</code> constant followed by a copy rule for
 the same path gives "this value, unless the target has a real one":</p>
-<div class="language-json highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="p">{</span><span class="nt">"from"</span><span class="p">:</span><span class="w"> </span><span class="s2">"properties.demand_energy"</span><span class="p">,</span><span class="w"> </span><span class="nt">"value"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">},</span>
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="p">{</span><span class="nt">"each"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"from"</span><span class="p">:</span><span class="w"> </span><span class="s2">"properties"</span><span class="p">,</span><span class="w"> </span><span class="nt">"to"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/model.technologies{demand-$k}"</span><span class="p">},</span>
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w"> </span><span class="nt">"rules"</span><span class="p">:</span><span class="w"> </span><span class="p">[{</span><span class="nt">"from"</span><span class="p">:</span><span class="w"> </span><span class="s2">"demand_energy"</span><span class="p">,</span><span class="w"> </span><span class="nt">"to"</span><span class="p">:</span><span class="w"> </span><span class="s2">"demand_profile"</span><span class="p">,</span><span class="w"> </span><span class="nt">"convert"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"linear"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"divisor"</span><span class="p">:</span><span class="w"> </span><span class="mi">8760000</span><span class="p">}}}]}</span>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="p">{</span><span class="nt">"from"</span><span class="p">:</span><span class="w"> </span><span class="s2">"properties.demand_energy"</span><span class="p">,</span><span class="w"> </span><span class="nt">"value"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">},</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="p">{</span><span class="nt">"each"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"from"</span><span class="p">:</span><span class="w"> </span><span class="s2">"properties"</span><span class="p">,</span><span class="w"> </span><span class="nt">"to"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/model.technologies{demand_$k}"</span><span class="p">},</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w"> </span><span class="nt">"rules"</span><span class="p">:</span><span class="w"> </span><span class="p">[{</span><span class="nt">"from"</span><span class="p">:</span><span class="w"> </span><span class="s2">"demand_energy"</span><span class="p">,</span><span class="w"> </span><span class="nt">"to"</span><span class="p">:</span><span class="w"> </span><span class="s2">"demand_profile"</span><span class="p">,</span><span class="w"> </span><span class="nt">"convert"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"linear"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"divisor"</span><span class="p">:</span><span class="w"> </span><span class="mi">8760000</span><span class="p">}}}]}</span>
 </span></code></pre></div>
-<p><strong>Discriminators.</strong> A source field that selects a shape (<code>feature_type</code> being
-<code>BasePOI</code> or <code>TopologyNode</code>) can often be reconstructed from what the forward
-direction produced for each shape. Two <code>from</code> constants with complementary
-<code>when.reverse</code> conditions do it:</p>
-<div class="language-json highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="p">{</span><span class="nt">"from"</span><span class="p">:</span><span class="w"> </span><span class="s2">"properties.feature_type"</span><span class="p">,</span><span class="w"> </span><span class="nt">"value"</span><span class="p">:</span><span class="w"> </span><span class="s2">"BasePOI"</span><span class="p">,</span><span class="w">      </span><span class="nt">"when"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"reverse"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"path"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/model.trade{grid-$k}"</span><span class="p">,</span><span class="w"> </span><span class="nt">"exists"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">}}},</span>
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="p">{</span><span class="nt">"from"</span><span class="p">:</span><span class="w"> </span><span class="s2">"properties.feature_type"</span><span class="p">,</span><span class="w"> </span><span class="nt">"value"</span><span class="p">:</span><span class="w"> </span><span class="s2">"TopologyNode"</span><span class="p">,</span><span class="w"> </span><span class="nt">"when"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"reverse"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"path"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/model.trade{grid-$k}"</span><span class="p">,</span><span class="w"> </span><span class="nt">"exists"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">}}}</span>
+<p><strong>Discriminators.</strong> A source field that selects a shape (<code>feature_type</code>
+being <code>BasePOI</code> or <code>TopologyNode</code>) can often be reconstructed from what the
+forward direction produced for each shape. Two <code>from</code> constants with
+complementary <code>when.reverse</code> conditions do it:</p>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="p">{</span><span class="nt">"from"</span><span class="p">:</span><span class="w"> </span><span class="s2">"properties.feature_type"</span><span class="p">,</span><span class="w"> </span><span class="nt">"value"</span><span class="p">:</span><span class="w"> </span><span class="s2">"BasePOI"</span><span class="p">,</span><span class="w">      </span><span class="nt">"when"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"reverse"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"path"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/model.trade{grid_$k}"</span><span class="p">,</span><span class="w"> </span><span class="nt">"exists"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">}}},</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="p">{</span><span class="nt">"from"</span><span class="p">:</span><span class="w"> </span><span class="s2">"properties.feature_type"</span><span class="p">,</span><span class="w"> </span><span class="nt">"value"</span><span class="p">:</span><span class="w"> </span><span class="s2">"TopologyNode"</span><span class="p">,</span><span class="w"> </span><span class="nt">"when"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"reverse"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"path"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/model.trade{grid_$k}"</span><span class="p">,</span><span class="w"> </span><span class="nt">"exists"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">}}}</span>
 </span></code></pre></div>
 <p><strong>Collections keyed by value.</strong> An <code>each</code> with <code>bind</code> whose key does not
 carry the array position runs in join mode backwards: it fills the elements
-that earlier rules created. Order the rules so the creating rule (the one
-that writes <code>topology[$i]</code> with <code>from.id</code>) comes first. Elements nothing
-creates are not restored; in the shipped mapping, that is a building without
+that earlier rules created. Order the rules so that the creating rule (the
+one that writes <code>topology[$i]</code> with <code>from.id</code>) comes first. Elements nothing
+creates are not restored; in the shipped mapping that is a building without
 a connection, which has a node but no transmission arc.</p>
 <p><strong>Keys that carry positions.</strong> A template such as <code>{line_$i}</code> paired with
 <code>topology[$i]</code> places entries by the number in their key. Entries whose key
@@ -1186,9 +1196,8 @@ Gaps in the numbers are closed when arrays are compacted at the end.</p>
 <p>For any mapping, the useful checks are: <code>Reverse(Transform(x))</code> has the shape
 of <code>x</code> with only the declared placeholders differing;
 <code>Transform(Reverse(Transform(x)))</code> equals <code>Transform(x)</code>; and both outputs
-are accepted by the systems that will read them. See
-<a href="../../development/testing/">Testing</a> for how the repository does this for the
-shipped mapping.</p>
+are accepted by the systems that will read them. <a href="../../development/testing/">Testing</a>
+describes how the repository does this for the shipped mapping.</p>
 
 
 
@@ -1211,7 +1220,7 @@ shipped mapping.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="September 27, 2026 20:26:56 UTC">September 27, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="October 9, 2026 14:49:32 UTC">October 9, 2026</span>
   </span>
 
     

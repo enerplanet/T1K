@@ -721,6 +721,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#identifiers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Identifiers
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#field-mapping" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1065,13 +1076,24 @@ define.</p>
 <h2 id="decisions">Decisions<a class="headerlink" href="#decisions" title="Permanent link">&para;</a></h2>
 <ul>
 <li><strong>A node per feature, an arc per connection.</strong> Every building and
-  transformer becomes a node keyed by its feature <code>id</code> (<code>1</code>, <code>trafo_2585</code>);
-  every connection becomes a bidirectional transmission arc keyed by pipe
-  kind and position (<code>lv_0</code>, <code>mv_2</code>) with the length as <code>distance</code>. The
-  topology is therefore preserved exactly and the reverse can rebuild it.
-  (The translator on EnerPlanET's <code>feature/heat-integration</code> branch instead
-  sums buildings into one node per transformer area; that aggregation cannot
-  be inverted, so T1K keeps the features.)</li>
+  transformer becomes a node keyed by its feature <code>id</code> with the prefix <code>n</code>
+  (<code>n1</code>, <code>ntrafo_2585</code>); every connection becomes a bidirectional
+  transmission arc keyed by pipe kind and position (<code>lv_0</code>, <code>mv_2</code>) with the
+  length as <code>distance</code>. The topology is therefore preserved exactly and the
+  reverse can rebuild it. (The translator on EnerPlanET's
+  <code>feature/heat-integration</code> branch instead sums buildings into one node per
+  transformer area; that aggregation cannot be inverted, so T1K keeps the
+  features.)</li>
+<li><strong>Identifiers that Calliope accepts.</strong> Calliope 0.7 requires identifiers to
+  match <code>^[^_^\d][\w]*$</code>: no leading digit or underscore, and only letters,
+  digits and <code>_</code>. EnerPlanET numbers its buildings, so node ids get the
+  prefix <code>n</code>, and every generated key joins its parts with <code>_</code>
+  (<code>demand_1</code>, <code>pv_supply_1</code>, <code>grid_trafo_2585</code>, <code>households_1</code>). The
+  node references copied into transmission arcs get the same prefix through
+  the <code>affix</code> converter and are checked by a <code>match</code> guard, so an id that
+  cannot be made valid fails the transformation rather than MEME's Calliope
+  target. The reverse strips the prefix, so EnerPlanET's ids come back
+  unchanged. This answers <a href="https://github.com/enerplanet/T1K/issues/1">issue #1</a>.</li>
 <li><strong>The transformer is the grid connection.</strong> As in the simulation engine,
   which attaches a <code>transformer_supply</code> technology capped by the rated power,
   each transformer gets a <code>trade</code> entry importing at most its rating (kVA as
@@ -1090,6 +1112,64 @@ define.</p>
 <li><strong>Electricity only.</strong> Heat demand (<code>demand_heat</code>) is carried by no rule;
   the reverse writes 0.</li>
 </ul>
+<h2 id="identifiers">Identifiers<a class="headerlink" href="#identifiers" title="Permanent link">&para;</a></h2>
+<p>MEME accepts letters, digits, <code>.</code>, <code>_</code> and <code>-</code> in identifiers, but its
+Calliope target applies Calliope's stricter rule, <code>^[^_^\d][\w]*$</code>. The
+mapping therefore generates every key and reference as follows:</p>
+<table>
+<thead>
+<tr>
+<th>EnerPlanET</th>
+<th>MEME key</th>
+<th>MEME references</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>building id <code>1</code></td>
+<td>node <code>n1</code></td>
+<td><code>node: "n1"</code> in its technologies and trades; <code>from</code>/<code>to: "n1"</code> in arcs</td>
+</tr>
+<tr>
+<td>transformer id <code>trafo_2585</code></td>
+<td>node <code>ntrafo_2585</code></td>
+<td><code>node: "ntrafo_2585"</code> in its trade; <code>from</code>/<code>to</code> in arcs</td>
+</tr>
+<tr>
+<td>demand of building <code>1</code></td>
+<td>technology <code>demand_1</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>techs.pv_supply</code> of building <code>1</code></td>
+<td>technology <code>pv_supply_1</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>techs.households_supply</code> of building <code>1</code></td>
+<td>trade <code>households_1</code></td>
+<td></td>
+</tr>
+<tr>
+<td>transformer <code>trafo_2585</code> rating</td>
+<td>trade <code>grid_trafo_2585</code></td>
+<td></td>
+</tr>
+<tr>
+<td>connection at position 0 with pipe <code>lv</code></td>
+<td>arc <code>lv_0</code></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>The prefix comes from the key template <code>model.nodes{n$k}</code> and the templates
+<code>n$k</code> of the <code>node</code> references; the references copied from the topology
+(<code>from.id</code>, <code>to.id</code>) get it through the <code>affix</code> converter followed by a
+<code>match</code> guard. An id that is still invalid after the prefix, for example one
+containing a hyphen, fails the transformation with the rule named. The
+reverse strips the prefix, so EnerPlanET's ids return unchanged; a job that
+references nodes without the prefix is rejected by the reverse rather than
+guessed at.</p>
 <h2 id="field-mapping">Field mapping<a class="headerlink" href="#field-mapping" title="Permanent link">&para;</a></h2>
 <p><code>kW→MW</code> means <code>linear</code> with divisor 1000, <code>×1000</code> the factor 1000, and
 <code>inf→absent</code> the <code>absent</code> converter for <code>"inf"</code> with <code>reverse_default: "inf"</code>.</p>
@@ -1170,7 +1250,7 @@ with <code>$p</code> bound to <code>pipe</code>:</p>
 <tr>
 <td><code>from.id</code>, <code>to.id</code></td>
 <td><code>from</code>, <code>to</code></td>
-<td>copy</td>
+<td><code>affix</code> prefix <code>n</code>, then <code>match</code> against Calliope's identifier syntax</td>
 </tr>
 <tr>
 <td><code>length</code> (km)</td>
@@ -1185,8 +1265,8 @@ with <code>$p</code> bound to <code>pipe</code>:</p>
 </tbody>
 </table>
 <h3 id="features">Features<a class="headerlink" href="#features" title="Permanent link">&para;</a></h3>
-<p>Each <code>topology[$i].from</code> and <code>topology[$i].to</code> becomes <code>model.nodes{$k}</code> with
-<code>$k</code> bound to the feature <code>id</code>; a transformer referenced by several
+<p>Each <code>topology[$i].from</code> and <code>topology[$i].to</code> becomes <code>model.nodes{n$k}</code>
+with <code>$k</code> bound to the feature <code>id</code>; a transformer referenced by several
 connections is written once.</p>
 <table>
 <thead>
@@ -1214,12 +1294,12 @@ connections is written once.</p>
 </tr>
 <tr>
 <td><code>properties.demand_energy</code> (kWh/a, when &gt; 0)</td>
-<td><code>technologies{demand-$k}</code> with <code>role</code> <code>demand</code>, <code>carrier_in</code> <code>electricity</code>, <code>demand_profile</code> in MW</td>
+<td><code>technologies{demand_$k}</code> with <code>role</code> <code>demand</code>, <code>node</code> <code>n$k</code>, <code>carrier_in</code> <code>electricity</code>, <code>demand_profile</code> in MW</td>
 <td>÷ 8 760 000, rounded</td>
 </tr>
 <tr>
 <td><code>properties.rated_power</code> (kVA, transformers)</td>
-<td><code>trade{grid-$k}</code> with <code>import.limit</code> in MW, <code>import.price</code> 300, <code>export</code></td>
+<td><code>trade{grid_$k}</code> with <code>node</code> <code>n$k</code>, <code>import.limit</code> in MW, <code>import.price</code> 300, <code>export</code></td>
 <td>kW→MW</td>
 </tr>
 <tr>
@@ -1230,15 +1310,16 @@ connections is written once.</p>
 <tr>
 <td><code>properties.feature_type</code>, <code>type</code>, <code>f_class</code>, <code>demand_profile</code>, <code>area</code></td>
 <td>none</td>
-<td>reverse: <code>BasePOI</code>, <code>residential</code>, <code>residential</code>, <code>residential</code>, <code>0</code> for a node without a <code>grid-*</code> trade; <code>TopologyNode</code>, <code>transformer</code>, <code>null</code> area for one with</td>
+<td>reverse: <code>BasePOI</code>, <code>residential</code>, <code>residential</code>, <code>residential</code>, <code>0</code> for a node without a <code>grid_*</code> trade; <code>TopologyNode</code>, <code>transformer</code>, <code>null</code> area for one with</td>
 </tr>
 </tbody>
 </table>
 <p><code>residential</code> is EnerPlanET's own fallback when a building has no usage
 class.</p>
 <h3 id="technologies">Technologies<a class="headerlink" href="#technologies" title="Permanent link">&para;</a></h3>
-<p><code>techs.&lt;key&gt;</code> of a feature becomes <code>technologies{&lt;key&gt;-$k}</code> (or
-<code>trade{...-$k}</code> for the grid tariffs), with <code>node</code> set to the feature's key.
+<p><code>techs.&lt;key&gt;</code> of a feature becomes <code>technologies{&lt;key&gt;_$k}</code> (or
+<code>trade{..._$k}</code> for the grid tariffs), with <code>node</code> set to <code>n$k</code>, the
+feature's node key.
 The shared rules, applied to every supply technology and the battery:</p>
 <table>
 <thead>
@@ -1343,7 +1424,7 @@ The shared rules, applied to every supply technology and the battery:</p>
 </tr>
 <tr>
 <td><code>households_supply</code>, <code>non_households_supply</code></td>
-<td><code>trade{households-$k}</code>, <code>trade{non_households-$k}</code></td>
+<td><code>trade{households_$k}</code>, <code>trade{non_households_$k}</code></td>
 <td><code>cost_om_con</code>→<code>import.price</code> (×1000); <code>cont_energy_cap_max</code>→<code>import.limit</code> (inf→absent, kW→MW)</td>
 </tr>
 </tbody>
@@ -1385,8 +1466,9 @@ gates then apply:</p>
 <h2 id="the-reverse-direction">The reverse direction<a class="headerlink" href="#the-reverse-direction" title="Permanent link">&para;</a></h2>
 <p><code>t1k -reverse</code> rebuilds the calculation payload from a job. Everything the
 tables above mark as a copy or conversion comes back exactly (numbers to
-their digits, kWh rounded to whole numbers); the reverse constants restore
-the payload's required keys with the placeholders listed. Two limits:</p>
+their digits, kWh rounded to whole numbers, node ids with their prefix
+stripped); the reverse constants restore the payload's required keys with the
+placeholders listed. Three limits:</p>
 <ul>
 <li>A building without a connection has a node and a demand but no
   transmission arc, so the reverse has nowhere to place it in <code>topology</code>; it
@@ -1394,6 +1476,9 @@ the payload's required keys with the placeholders listed. Two limits:</p>
 <li><code>user_id</code>, <code>session_id</code>, <code>callback_url</code>, <code>country</code> and <code>lkr</code> are not in a
   MEME job; the reverse writes empty strings, and the caller must set them
   (the simulation engine's schema requires a non-empty <code>country</code>).</li>
+<li>A transformer whose rating is 0 gets no grid trade, and the reverse, which
+  tells transformers from buildings by that trade, restores it as a
+  building.</li>
 </ul>
 <p><code>examples/</code> holds the payload, the job and the reverse output;
 <code>pkg/t1k/testdata/</code> pins both directions, and the tests check that converting the reverse output
@@ -1403,6 +1488,9 @@ forward again reproduces the job apart from the standalone building.</p>
 Typical edits: change the tariff constants, drop the unmet-demand rule for
 PyPSA, replace the constant demand by a series (<code>demand_profile</code> naming a
 <code>model.timeseries</code> entry), or add rules for further building properties.
+To change the node prefix, edit it in the three places that agree on it: the
+key template <code>model.nodes{n$k}</code> of the two node rules, the <code>n$k</code> templates of
+the <code>node</code> references, and the <code>affix</code> prefix of the arc references.
 <code>t1k -config my-mapping.json</code> runs the edited copy; the
 <a href="../../configuration/overview/">configuration reference</a> describes every
 construct.</p>
@@ -1428,7 +1516,7 @@ construct.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="September 27, 2026 20:34:58 UTC">September 27, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="October 9, 2026 14:49:31 UTC">October 9, 2026</span>
   </span>
 
     

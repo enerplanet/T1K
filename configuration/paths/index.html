@@ -678,6 +678,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Variables">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#anonymous-variables" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Anonymous variables
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -703,10 +720,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#anonymous-variables" class="md-nav__link">
+  <a href="#writing" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Anonymous variables
+        Writing
       
     </span>
   </a>
@@ -1070,7 +1087,8 @@
 
 
 <h1 id="paths-and-variables">Paths and variables<a class="headerlink" href="#paths-and-variables" title="Permanent link">&para;</a></h1>
-<p>A path addresses values in a JSON document.</p>
+<p>A path addresses values in a JSON document. Every rule has one path per
+side, and <code>each</code> rules, <code>bind</code> entries and conditions use paths as well.</p>
 <table>
 <thead>
 <tr>
@@ -1121,58 +1139,72 @@
 </tr>
 <tr>
 <td><code>"my.key".x</code></td>
-<td>a quoted key may contain any character (<code>\"</code> and <code>\\</code> escape)</td>
+<td>a quoted key may contain any character; <code>\"</code> and <code>\\</code> escape</td>
 </tr>
 </tbody>
 </table>
-<p>Segments may combine: <code>grid{$r}[$c]</code> reads row <code>$r</code>, column <code>$c</code>; <code>[0].x</code>
-starts at an array element when the document (or the current element) is an
-array.</p>
+<p>Suffixes chain and combine with keys: <code>grid{$r}[$c]</code> reads row <code>$r</code>, column
+<code>$c</code>; <code>a[0]{$k}</code> reads the entries of the first element. A segment that
+consists of suffixes alone, such as <code>[0].x</code> or <code>{$k}.v</code>, is allowed only at
+the start of a path, where it addresses the current element's own elements or
+entries. Whitespace around the expression is ignored; a bare key must not
+contain <code>$</code>, <code>.</code>, brackets or quotes (quote it instead).</p>
 <h2 id="variables">Variables<a class="headerlink" href="#variables" title="Permanent link">&para;</a></h2>
-<p>A variable is <code>$</code> followed by a name (<code>[A-Za-z_][A-Za-z0-9_]*</code>), or <code>${name}</code>
-where the name would otherwise run into following text (<code>{${p}_$i}</code>). Its
-value is always a string: an array index becomes <code>"0"</code>, <code>"1"</code>, ...; an object
-key is taken as it is.</p>
+<p>A variable is <code>$</code> followed by a name matching <code>[A-Za-z_][A-Za-z0-9_]*</code>, or
+<code>${name}</code> where the name would otherwise run into following text
+(<code>{${p}_$i}</code>). A variable's value is always a string: an array index becomes
+<code>"0"</code>, <code>"1"</code>, ...; an object key is taken as it is.</p>
 <p>Variables make rules bidirectional:</p>
 <ul>
 <li>On the side being <em>read</em>, an unbound variable iterates: the rule applies
-  once for every element or entry that matches, and each match binds the
-  variable.</li>
+  once per element or entry that matches, and each match binds the variable.</li>
 <li>On the side being <em>written</em>, every variable must be bound; its value is
-  substituted into the path. A variable used as an array index must then
-  hold a non-negative integer, otherwise the rule fails.</li>
-<li>A variable that is already bound (by an enclosing <code>each</code>, or by an earlier
-  step of the same path) selects exactly one element or entry.</li>
+  substituted into the path. A variable used as an array index must then hold
+  a non-negative integer (leading zeros are accepted); anything else fails the
+  rule.</li>
+<li>A variable that is already bound, by an enclosing <code>each</code> or by an earlier
+  step of the same path, selects exactly one element or entry.</li>
 </ul>
-<p>Hence a copy rule must use the same set of variables on both sides, apart
-from those bound by an enclosing <code>each</code>:</p>
+<p>A copy rule must therefore use the same variables on both sides, apart from
+those bound by an enclosing <code>each</code>:</p>
 <div class="language-json highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="p">{</span><span class="nt">"from"</span><span class="p">:</span><span class="w"> </span><span class="s2">"items[$i].v"</span><span class="p">,</span><span class="w"> </span><span class="nt">"to"</span><span class="p">:</span><span class="w"> </span><span class="s2">"byIndex{item_$i}.value"</span><span class="p">}</span>
 </span></code></pre></div>
-<p>Forward, <code>$i</code> iterates the array and names the keys; reverse, <code>$i</code> is parsed
-out of every <code>item_N</code> key and places the value at index N. Keys that do not
-fit the template (<code>other</code>) are ignored in the reverse direction.</p>
-<h2 id="key-templates">Key templates<a class="headerlink" href="#key-templates" title="Permanent link">&para;</a></h2>
-<p>The text between braces is a template of literal characters and variables.
-<code>$$</code> stands for a literal dollar sign. Two variables must be separated by
-literal text (<code>{$a$b}</code> is rejected, <code>{$a-$b}</code> is fine), because a key is
-parsed by matching that text: earlier variables take the shortest possible
-match, the last one the rest. For <code>{${p}_$i}</code>, the key <code>lv_0</code> binds <code>p=lv</code>
-and <code>i=0</code>, and <code>a_b_c</code> binds <code>p=a</code> and <code>i=b_c</code>. A template without variables
-is a literal key: <code>a{fixed}</code> is the same as <code>a.fixed</code>.</p>
-<h2 id="matching-and-absence">Matching and absence<a class="headerlink" href="#matching-and-absence" title="Permanent link">&para;</a></h2>
-<p>A path with no unbound variables addresses exactly one value, which is either
-present or absent. Absence is not an error: a copy rule with an absent source
-writes nothing (or its default), and a condition can test it with <code>exists</code>.
-Reading through a value of the wrong kind (a key on an array, an index on an
-object, anything on a scalar) is likewise absence.</p>
-<p>A path with unbound variables yields one match per element that exists, and
-none when nothing does.</p>
-<h2 id="anonymous-variables">Anonymous variables<a class="headerlink" href="#anonymous-variables" title="Permanent link">&para;</a></h2>
+<p>Forward, <code>$i</code> iterates the array and names the keys. Reverse, <code>$i</code> is parsed
+out of every <code>item_N</code> key and places the value at index N; keys that do not
+fit the template (<code>other</code>) are ignored.</p>
+<h3 id="anonymous-variables">Anonymous variables<a class="headerlink" href="#anonymous-variables" title="Permanent link">&para;</a></h3>
 <p><code>[*]</code> and <code>{*}</code> are named <code>$_1</code>, <code>$_2</code>, ... in order of appearance on each
 side of a rule, so <code>items[*].name</code> paired with <code>things[*].label</code> pairs the
 first <code>*</code> of one side with the first of the other. They are convenient for
-simple copies; use named variables as soon as a path has more than one or a
-nested rule refers to it.</p>
+simple copies; use named variables as soon as a path has more than one, or a
+nested rule needs to refer to it.</p>
+<h2 id="key-templates">Key templates<a class="headerlink" href="#key-templates" title="Permanent link">&para;</a></h2>
+<p>The text between braces is a template of literal characters and variables.
+<code>$$</code> stands for a literal dollar sign. A template without variables is a
+literal key: <code>a{fixed}</code> is the same as <code>a.fixed</code>.</p>
+<p>A key is parsed by matching the template's literal text, so two variables
+must be separated by literal text: <code>{$a$b}</code> is rejected, <code>{$a-$b}</code> is
+accepted. Earlier variables take the shortest possible match and the last one
+takes the rest: for <code>{${p}_$i}</code>, the key <code>lv_0</code> binds <code>p=lv</code> and <code>i=0</code>, and
+<code>a_b_c</code> binds <code>p=a</code> and <code>i=b_c</code>. A variable matches any characters, including
+newlines. Template text must be valid UTF-8; a template that is not is
+rejected when the configuration is loaded.</p>
+<h2 id="matching-and-absence">Matching and absence<a class="headerlink" href="#matching-and-absence" title="Permanent link">&para;</a></h2>
+<p>A path with no unbound variables addresses exactly one value, which is either
+present or absent. Absence is not an error: a copy rule with an absent source
+writes nothing (or its default), and a condition can test for it with
+<code>exists</code>. Reading through a value of the wrong kind (a key on an array, an
+index on an object, anything on a scalar) is likewise absence, as is an index
+beyond the end of an array.</p>
+<p>A path with unbound variables yields one match per element or entry that
+exists, and none when nothing does.</p>
+<h2 id="writing">Writing<a class="headerlink" href="#writing" title="Permanent link">&para;</a></h2>
+<p>Writing resolves a path to a concrete location, substituting every variable,
+and creates the objects and arrays on the way. Writing an index beyond the
+end of an array grows the array; the positions skipped are removed when the
+run completes (see the <a href="../overview/#evaluation-model">evaluation model</a>).
+Writing to <code>.</code> or <code>/</code> replaces the current element or the whole output
+document with the value.</p>
 
 
 
@@ -1195,7 +1227,7 @@ nested rule refers to it.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="September 27, 2026 20:26:56 UTC">September 27, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="October 9, 2026 14:49:32 UTC">October 9, 2026</span>
   </span>
 
     

@@ -866,23 +866,24 @@
 <p><img alt="T1K banner" src="assets/logos/t1k-banner-dark.png#only-dark" />
 <img alt="T1K banner" src="assets/logos/t1k-banner-light.png#only-light" /></p>
 <h1 id="t1k">T1K<a class="headerlink" href="#t1k" title="Permanent link">&para;</a></h1>
-<p>T1K converts one JSON structure into another, driven by a declarative mapping
+<p>T1K converts one JSON structure into another from a declarative mapping
 configuration, and converts the result back again. It is a Go package with a
 command-line tool, depends only on the Go standard library, and ships with the
 mapping that turns an <a href="https://github.com/enerplanet/enerplanet">EnerPlanET</a>
 calculation payload into a <a href="https://github.com/enerplanet/meme">MEME</a> job.</p>
 <h2 id="the-core-idea">The core idea<a class="headerlink" href="#the-core-idea" title="Permanent link">&para;</a></h2>
-<p>A mapping is a list of rules. Each rule pairs a path in the source document
-with a path in the target document:</p>
+<p>A mapping configuration is a list of rules. Each rule pairs a path in the
+source document with a path in the target document, optionally passing the
+value through an invertible converter:</p>
 <div class="language-json highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="p">{</span><span class="nt">"from"</span><span class="p">:</span><span class="w"> </span><span class="s2">"order.total_cents"</span><span class="p">,</span><span class="w"> </span><span class="nt">"to"</span><span class="p">:</span><span class="w"> </span><span class="s2">"invoice.total"</span><span class="p">,</span><span class="w"> </span><span class="nt">"convert"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"linear"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"divisor"</span><span class="p">:</span><span class="w"> </span><span class="mi">100</span><span class="p">}}}</span>
 </span></code></pre></div>
-<p><code>Transform</code> reads the rule left to right; <code>Reverse</code> reads it right to left and
-runs the converter backwards. Because every rule is written once and read in
-both directions, one configuration gives both transformations, and a mapping
-cannot drift between them.</p>
-<p>Paths can contain variables. A variable iterates on the side where it is
-matched and is substituted on the other side, which is how a single rule
-moves a whole collection and restructures it:</p>
+<p>The forward direction (<code>Transform</code>) reads the rule from <code>from</code> to <code>to</code>; the
+reverse direction (<code>Reverse</code>) reads it from <code>to</code> to <code>from</code> and runs the
+converter backwards. Every rule is written once and read in both directions,
+so one configuration yields both transformations and they cannot drift apart.</p>
+<p>Paths may contain variables. A variable iterates on the side that is read and
+is substituted on the side that is written, which is how one rule moves a
+whole collection and restructures it:</p>
 <div class="language-json highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="p">{</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span><span class="nt">"each"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"from"</span><span class="p">:</span><span class="w"> </span><span class="s2">"order.lines[$i]"</span><span class="p">,</span><span class="w"> </span><span class="nt">"to"</span><span class="p">:</span><span class="w"> </span><span class="s2">"invoice.items{line_$i}"</span><span class="p">},</span>
 </span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">  </span><span class="nt">"rules"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
@@ -891,13 +892,14 @@ moves a whole collection and restructures it:</p>
 </span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="w">  </span><span class="p">]</span>
 </span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="p">}</span>
 </span></code></pre></div>
-<p>turns an array of lines into an object keyed <code>line_0</code>, <code>line_1</code>, ... and back.</p>
+<p>This rule turns an array of lines into an object keyed <code>line_0</code>, <code>line_1</code>,
+... and, in reverse, the object back into the array.</p>
 <h2 id="where-to-go-next">Where to go next<a class="headerlink" href="#where-to-go-next" title="Permanent link">&para;</a></h2>
 <ul>
 <li><a href="usage/installation/">Installation</a> and the <a href="usage/quickstart/">Quickstart</a></li>
 <li>Using the <a href="usage/cli/">command line</a> or the <a href="usage/library/">Go package</a></li>
 <li>The mapping language: <a href="configuration/overview/">overview</a>,
-  <a href="configuration/paths/">paths</a>, <a href="configuration/rules/">rules</a>,
+  <a href="configuration/paths/">paths and variables</a>, <a href="configuration/rules/">rules</a>,
   <a href="configuration/converters/">converters</a> and
   <a href="configuration/reverse/">the reverse direction</a></li>
 <li>The shipped mapping: <a href="mappings/enerplanet-to-meme/">EnerPlanET to MEME</a></li>
@@ -906,18 +908,25 @@ moves a whole collection and restructures it:</p>
 </ul>
 <h2 id="design-goals">Design goals<a class="headerlink" href="#design-goals" title="Permanent link">&para;</a></h2>
 <ul>
-<li><strong>Reversible by construction.</strong> A rule is a relation, not a procedure.
-  Converters are invertible; what cannot be inverted (a dropped field) is
-  restored from a declared default.</li>
+<li><strong>Reversible by construction.</strong> A rule is a relation between two documents,
+  not a procedure. Converters are invertible, and what cannot be inverted (a
+  field the target has no place for) is restored from a declared default.</li>
 <li><strong>Strict configurations.</strong> Unknown keys, unbalanced variables, unknown
-  converters and malformed conditions are rejected when the configuration is
-  loaded, with the rule's position in the message.</li>
-<li><strong>Faithful documents.</strong> Numbers keep their digits unless a converter
-  touches them; the input is never modified; every conversion runs on its own
-  state, so tasks can run in parallel.</li>
-<li><strong>No dependencies.</strong> Standard library only, so the package is easy to vet
-  and to embed.</li>
+  converters and malformed conditions are rejected when a configuration is
+  loaded, and every message names the position of the offending rule.</li>
+<li><strong>Faithful documents.</strong> A number keeps its digits unless a converter
+  computes it; the input document is never modified; every conversion runs on
+  its own state, so tasks can run in parallel.</li>
+<li><strong>No dependencies.</strong> The standard library only, so the package is easy to
+  audit and to embed.</li>
 </ul>
+<div class="admonition note">
+<p class="admonition-title">Status</p>
+<p>T1K is pre-1.0. Before 1.0, a minor release may change the configuration
+format or the keys the shipped mapping generates; such changes are listed
+in the <a href="https://github.com/enerplanet/T1K/blob/main/CHANGELOG.md">changelog</a>
+with the keys concerned.</p>
+</div>
 
 
 
@@ -940,7 +949,7 @@ moves a whole collection and restructures it:</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="September 27, 2026 21:17:05 UTC">September 27, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="October 9, 2026 14:49:32 UTC">October 9, 2026</span>
   </span>
 
     
