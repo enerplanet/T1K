@@ -41,11 +41,11 @@ directions.
 ```
 
 Paths address object keys, array elements and object entries; variables such
-as `$i` iterate on one side and are substituted on the other, which is what
-lets a rule turn an array into a keyed object and back. Converters are
-invertible (`linear`, `lookup`, `datetime`, `number`, `string`, `absent`,
-`affix`, `match`), and
-`each` groups nested rules relative to a pair of elements. The
+as `$i` iterate on the side that is read and are substituted on the side that
+is written, which is what lets one rule turn an array into a keyed object and
+back. Converters are invertible (`linear`, `lookup`, `datetime`, `number`,
+`string`, `absent`, `affix`, `match`), `each` groups nested rules relative to
+a pair of elements, and `when` conditions gate rules per direction. The
 [configuration reference](https://enerplanet.github.io/T1K/configuration/overview/)
 describes every construct.
 
@@ -108,10 +108,13 @@ payload EnerPlanET sends to its simulation webservice onto MEME's canonical
 model: every topology feature becomes a node, every connection a transmission
 arc, buildings get a demand technology from their annual consumption, attached
 technologies (`pv_supply`, `battery_storage`, ...) become MEME technologies
-with kW converted to MW, and transformers become the grid connection. The
+with kW converted to MW, and transformers become the grid connection. Every
+generated identifier satisfies Calliope's naming rule, and the reverse
+restores EnerPlanET's own ids. The
 [mapping page](https://enerplanet.github.io/T1K/mappings/enerplanet-to-meme/)
 lists every field, the unit conversions and what the reverse restores.
-[`examples/`](examples/) holds a payload and the job it produces.
+[`examples/`](examples/) holds a payload, the job it produces and the
+payload rebuilt from that job.
 
 ## Development
 
@@ -119,8 +122,11 @@ lists every field, the unit conversions and what the reverse restores.
 make test        # go test ./...
 make test-race   # with the race detector, shuffled
 make lint        # go vet + golangci-lint
+make fuzz        # every fuzz target, FUZZTIME each
+make bench       # benchmarks of Transform and Reverse
 make example     # convert examples/enerplanet-calculation.json both ways
 make docs        # serve the documentation (pip install -r docs/requirements.txt)
+make help        # every target
 ```
 
 Or containerized: [environment/](environment/) carries a single image with

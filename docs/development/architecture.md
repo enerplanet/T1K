@@ -46,12 +46,12 @@ concurrently.
 
 ## Compilation
 
-`mapping.Compile` parses the JSON into a tree of `rule` values of three
-kinds: copy, constant and scope (`each`). One file compiles each kind
-(`compile.go` for copy and constant rules, `compile_scope.go` for scopes and
-their `bind`, `condition.go` for `when`), reading raw JSON through the
-`fields` helper so every mistake is reported with the field's name and the
-rule's position. Compilation resolves every path, key template, converter
+`mapping.Compile` parses the JSON into a tree of `rule` values (`rule.go`)
+of three kinds: copy, constant and scope (`each`). One file compiles each
+kind (`compile.go` for the document, definitions, copy and constant rules,
+`compile_scope.go` for scopes and their `bind`, `condition.go` for `when`),
+reading raw JSON through the `fields` helper (`fields.go`) so every mistake
+is reported with the field's name and the rule's position. Compilation resolves every path, key template, converter
 chain and condition once and checks the variable discipline that makes rules
 reversible:
 
@@ -88,9 +88,12 @@ removes at the end.
 
 A converter implements `Forward` and `Reverse` over a `(value, present)`
 pair, so it can turn a value into absence and back. A chain runs its steps
-in order forward and backwards in reverse. Each converter lives in its own
-file; factories read their arguments through a strict reader that rejects
-unknown ones, so a misspelt argument fails at load time.
+in order forward and backwards in reverse. The scalar converters
+(`identity`, `number`, `string`) share `scalar.go`; every other converter
+(`linear`, `lookup`, `datetime`, `absent`, `affix`, `match`) has a file of
+its own. Factories read their arguments through a strict reader
+(`args.go`) that rejects unknown ones, so a misspelt argument fails at load
+time.
 
 ## Principles
 
@@ -101,7 +104,7 @@ unknown ones, so a misspelt argument fails at load time.
   error, a value of the wrong type for a converter is.
 - **Faithful documents:** numbers keep their text, the input is never
   modified, the output never aliases the input.
-- **Deterministic output:** sorted keys, no exponent notation, stable
-  compaction.
+- **Deterministic output:** sorted keys, computed numbers in plain decimal
+  notation, stable compaction.
 - **Small functions:** every function does one thing and says so in its
   comment; the engine is a set of named steps, not one loop.

@@ -2,21 +2,31 @@
 
 ```
 t1k [-config FILE] [-reverse] [-in FILE] [-out FILE] [-compact]
+t1k -print-config
+t1k -version
 ```
+
+The command converts one JSON document with a mapping configuration.
 
 | Flag | Meaning |
 |---|---|
-| `-config FILE` | the mapping configuration; without it the embedded EnerPlanET to MEME mapping is used |
+| `-config FILE` | the mapping configuration to apply; without it, the embedded EnerPlanET to MEME mapping is used |
 | `-in FILE` | the input document; default: standard input |
 | `-out FILE` | the output document; default: standard output |
-| `-reverse` | apply the reverse transformation (target structure to source structure) |
+| `-reverse` | apply the reverse direction: from the target structure back to the source structure |
 | `-compact` | write compact JSON; the default is two-space indentation |
-| `-print-config` | print the embedded mapping and exit, as a starting point for a custom one |
+| `-print-config` | print the embedded mapping and exit, as a starting point for a custom one (`-config` is ignored) |
 | `-version` | print the version and exit |
-| `-h`, `-help` | print the usage |
+| `-h`, `-help` | print the usage and exit |
 
-The output always ends with a newline. Object keys are written in sorted
-order (see [the evaluation model](../configuration/overview.md#evaluation-model)).
+## Input and output
+
+- With `-in`, standard input is not read. With `-out`, the file is created
+  or overwritten; nothing is written to standard output.
+- The output always ends with a newline, so it can be concatenated or
+  appended to a log.
+- Object keys are written in sorted order, and numbers that were only moved
+  keep their digits (see the [evaluation model](../configuration/overview.md#evaluation-model)).
 
 ## Exit status
 
@@ -24,18 +34,20 @@ order (see [the evaluation model](../configuration/overview.md#evaluation-model)
 |---|---|
 | 0 | success |
 | 1 | the configuration is invalid, the input is not JSON, a rule failed, or a file could not be read or written; the message on standard error says which |
-| 2 | usage error: an unknown flag or a stray argument |
+| 2 | usage error: an unknown flag or a stray argument; the usage is printed |
 
-A failing rule is reported with its position in the configuration and the
-direction, for example:
+A failing rule is reported with its position in the configuration, the
+direction and the path or converter that failed:
 
 ```
 t1k: t1k: rule failed: rules[16].rules[5] (forward): length: number: string "far" is not numeric
 ```
 
 `rules[16].rules[5]` is the sixth nested rule of the seventeenth top-level
-rule; rules spliced in from a definition carry the definition's name, as in
-`rules[17].rules[0](definitions.feature)[3]`.
+rule. Rules spliced in from a definition carry the definition's name, as in
+`rules[17].rules[0](definitions.feature)[3]`: the fourth rule of the
+definition `feature`, used by the first nested rule of the eighteenth
+top-level rule.
 
 ## Examples
 

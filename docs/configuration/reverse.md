@@ -1,42 +1,55 @@
 # The reverse direction
 
 `Reverse` is not a second mapping: it is the same rules read from `to` to
-`from`. This page collects what that means and how to write a mapping whose
-reverse does what you expect.
+`from`. This page collects what that means for each construct and how to
+write a mapping whose reverse does what you expect.
 
-## What Reverse does with each construct
+## What the reverse direction does with each construct
 
-| Construct | Forward | Reverse |
+| Construct | Forward direction | Reverse direction |
 |---|---|---|
 | copy rule | read `from`, convert, write `to` | read `to`, convert backwards, write `from` |
 | `default` | written when `from` is absent | ignored |
 | `reverse_default` | ignored | written when `to` is absent |
 | constant with `to` | written | ignored |
 | constant with `from` | ignored | written |
-| `each` | enumerate `from` elements, write below `to` | enumerate `to` entries, write below `from` (or join, see below) |
-| `bind` | read the variable from the element | write the variable back (iterate mode) or read it from the created element (join mode) |
+| `each` | enumerate the `from` elements, write below `to` | enumerate the `to` entries, write below `from`, or join (see below) |
+| `bind` | read the variable from the source element | write the variable back to its path (iterate mode), or read it from the element earlier rules created (join mode) |
 | `when.forward` | gates the rule | ignored |
 | `when.reverse` | ignored | gates the rule |
-| converter | forward | reverse, chains backwards |
+| converter chain | steps in order | steps backwards, each reversed |
 
 ## Lossless and lossy
 
 A copy rule with an invertible converter is lossless: the value comes back
-exactly (numbers to their digits, unless a converter computed them). Two
+exactly, numbers to their digits unless a converter computed them. Three
 things are lossy by nature:
 
 - A source field with no counterpart on the target side is not carried.
-  Declare what Reverse should put there with a `from` constant or a
-  `reverse_default`, choosing a value that is honest about being a
-  placeholder, and document it.
-- A converter that rounds, or a `datetime` layout that drops parts, loses
-  the digits or parts it does not keep.
+  Declare what the reverse should put there with a `from` constant or a
+  `reverse_default`, choose a value that is honest about being a placeholder,
+  and document it.
+- A converter that rounds, or a `datetime` layout that drops parts, loses the
+  digits or parts it does not keep.
+- A value whose type the target cannot express comes back in the type the
+  target has: a number wrapped by `affix`, or bound to a variable and written
+  back in iterate mode, returns as a string.
 
 Everything else round-trips, and the shipped mapping's tests check exactly
 that: converting the reverse output forward again reproduces the job, and
 reversing that reproduces the reverse output.
 
 ## Patterns
+
+**Wrapped identifiers.** A key template wraps a key (`model.nodes{n$k}`);
+the `affix` converter does the same for the value that references it and
+strips the text again in reverse, so a prefix that makes an id valid for the
+target never leaks back into the source. A `match` guard behind it reports an
+id the prefix cannot repair:
+
+```json
+{"from": "from.id", "to": "from", "convert": [{"affix": {"prefix": "n"}}, {"match": {"pattern": "[^_\\d]\\w*"}}]}
+```
 
 **Placeholder values.** EnerPlanET's `"inf"` means "no bound" and has no
 MEME counterpart. Drop it forward with `absent`, restore it backwards with
@@ -53,25 +66,25 @@ the same path gives "this value, unless the target has a real one":
 
 ```json
 {"from": "properties.demand_energy", "value": 0},
-{"each": {"from": "properties", "to": "/model.technologies{demand-$k}"},
+{"each": {"from": "properties", "to": "/model.technologies{demand_$k}"},
  "rules": [{"from": "demand_energy", "to": "demand_profile", "convert": {"linear": {"divisor": 8760000}}}]}
 ```
 
-**Discriminators.** A source field that selects a shape (`feature_type` being
-`BasePOI` or `TopologyNode`) can often be reconstructed from what the forward
-direction produced for each shape. Two `from` constants with complementary
-`when.reverse` conditions do it:
+**Discriminators.** A source field that selects a shape (`feature_type`
+being `BasePOI` or `TopologyNode`) can often be reconstructed from what the
+forward direction produced for each shape. Two `from` constants with
+complementary `when.reverse` conditions do it:
 
 ```json
-{"from": "properties.feature_type", "value": "BasePOI",      "when": {"reverse": {"path": "/model.trade{grid-$k}", "exists": false}}},
-{"from": "properties.feature_type", "value": "TopologyNode", "when": {"reverse": {"path": "/model.trade{grid-$k}", "exists": true}}}
+{"from": "properties.feature_type", "value": "BasePOI",      "when": {"reverse": {"path": "/model.trade{grid_$k}", "exists": false}}},
+{"from": "properties.feature_type", "value": "TopologyNode", "when": {"reverse": {"path": "/model.trade{grid_$k}", "exists": true}}}
 ```
 
 **Collections keyed by value.** An `each` with `bind` whose key does not
 carry the array position runs in join mode backwards: it fills the elements
-that earlier rules created. Order the rules so the creating rule (the one
-that writes `topology[$i]` with `from.id`) comes first. Elements nothing
-creates are not restored; in the shipped mapping, that is a building without
+that earlier rules created. Order the rules so that the creating rule (the
+one that writes `topology[$i]` with `from.id`) comes first. Elements nothing
+creates are not restored; in the shipped mapping that is a building without
 a connection, which has a node but no transmission arc.
 
 **Keys that carry positions.** A template such as `{line_$i}` paired with
@@ -85,6 +98,5 @@ Gaps in the numbers are closed when arrays are compacted at the end.
 For any mapping, the useful checks are: `Reverse(Transform(x))` has the shape
 of `x` with only the declared placeholders differing;
 `Transform(Reverse(Transform(x)))` equals `Transform(x)`; and both outputs
-are accepted by the systems that will read them. See
-[Testing](../development/testing.md) for how the repository does this for the
-shipped mapping.
+are accepted by the systems that will read them. [Testing](../development/testing.md)
+describes how the repository does this for the shipped mapping.

@@ -1,13 +1,15 @@
 # Converters
 
 A converter changes a value on its way from one side of a copy rule to the
-other. Every converter is invertible: Transform applies it forwards, Reverse
-backwards. A converter may also turn a value into *absent*, in which case the
-target key is not written and the rule's default, if any, applies.
+other. Every converter is invertible: the forward direction applies it
+forwards, the reverse direction backwards, and `reverse(forward(v))` yields
+`v` again up to the documented loss of representation. A converter may also
+turn a value into *absent*, in which case the target key is not written and
+the rule's default for that direction, if any, applies.
 
-`convert` takes one step or a list of steps applied in order; Reverse runs
-the list backwards. A step is a converter name or a one-key object carrying
-its arguments:
+`convert` takes one step or a list of steps applied in order; the reverse
+direction runs the list backwards. A step is a converter name, or an object
+with one key, the name, whose value holds the arguments:
 
 ```json
 "convert": "number"
@@ -15,26 +17,41 @@ its arguments:
 "convert": [{"absent": {"values": ["inf"], "ignore_case": true}}, {"linear": {"divisor": 1000}}]
 ```
 
-Unknown converters and unknown arguments are rejected when the configuration
-is loaded.
+Unknown converters and unknown or mistyped arguments are rejected when the
+configuration is loaded. An absent value passes through every converter
+unchanged.
+
+| Converter | Forward | Reverse |
+|---|---|---|
+| [`identity`](#identity) | the value as it is | the same |
+| [`number`](#number) | a number or numeric string as a number | the same |
+| [`string`](#string) | a scalar as a string | a string that reads as a number or boolean back to one |
+| [`linear`](#linear) | `x * factor / divisor + offset` | solved for `x` |
+| [`lookup`](#lookup) | the right value of the pair whose left value matches | the left value of the matching right value |
+| [`datetime`](#datetime) | a timestamp rendered in the `to` layout | rendered in the `from` layout |
+| [`absent`](#absent) | listed values become absent | the same |
+| [`affix`](#affix) | `prefix + value + suffix` | the prefix and suffix stripped |
+| [`match`](#match) | the value, or an error when it does not match the pattern | the same |
 
 ## identity
 
-Passes the value through. It is the default when `convert` is omitted.
+Passes the value through unchanged. It is the converter of a rule without
+`convert`; naming it explicitly is allowed.
 
 ## number
 
 Accepts a JSON number or a string holding one and yields a JSON number, in
-both directions. A number keeps its exact digits (`8.0` stays `8.0`); a string
-is parsed and normalised (`" 8 "` becomes `8`). Booleans, `null` and
-containers are errors.
+both directions. A number keeps its exact text (`8.0` stays `8.0`, `1e3` stays
+`1e3`); a string is parsed and normalised (`" 8 "` becomes `8`, `"1e3"`
+becomes `1000`). Booleans, `null`, containers and strings that do not hold a
+finite decimal number are errors.
 
 ## string
 
 Forward renders a number or boolean as a string (`8.5` to `"8.5"`, `true` to
-`"true"`); strings pass through. Reverse turns a string that reads as a
-number or boolean back into one and leaves other strings alone; a non-string
-passes through.
+`"true"`); strings pass through; `null` and containers are errors. Reverse
+turns a string that reads as a finite number or as `true`/`false` back into
+that value and leaves every other string alone; a non-string passes through.
 
 ## linear
 
@@ -48,12 +65,13 @@ passes through.
 | `round_forward` | none | round the forward result to this many decimals |
 | `round_reverse` | none | round the reverse result to this many decimals |
 
-`factor` and `divisor` must not be zero. The input may be a number or a
-numeric string; anything else is an error. Results are emitted in plain
-decimal notation rounded to 15 significant digits, so `8889.3 / 1000` is
-`8.8893`, not `8.889299999999999`.
+`factor` and `divisor` must not be zero, and rounding decimals must not be
+negative. The input may be a number or a numeric string; anything else is an
+error. Results are emitted in plain decimal notation, rounded to 15
+significant digits, so `8889.3 / 1000` is `8.8893` and never
+`8.889299999999999`; a result that is not finite is an error.
 
-Rounding is where a linear conversion may lose information; the shipped
+Rounding is the one place a linear conversion loses information. The shipped
 mapping uses it to turn an annual energy in kWh into an average power in MW
 with nine decimals and back into whole kWh.
 
@@ -65,11 +83,13 @@ Translates between two vocabularies through a list of pairs:
 {"lookup": {"pairs": [[15, "15min"], [30, "30min"], [60, "1H"]], "strict": true}}
 ```
 
-Forward maps the left value to the right, reverse the right to the left;
-values compare structurally (numbers by value, so `60.0` matches `60`) and
-may be of any JSON type. Both columns must be free of duplicates so the table
-is invertible. A value without a pair is an error, or passes through
-unchanged when `strict` is `false`.
+Forward maps the left value of a pair to its right value, reverse the right
+value to the left. Values are compared structurally (numbers by value, so
+`60.0` matches `60`) and may be of any JSON type, objects and arrays
+included; the matched value is copied out of the table, never shared. Both
+columns must be free of duplicates so the table is invertible. A value
+without a pair is an error, or passes through unchanged when `strict` is
+`false`.
 
 ## datetime
 
@@ -79,14 +99,39 @@ Re-formats a timestamp string between two layouts:
 {"datetime": {"from": "2006-01-02T15:04:05.000Z", "to": "RFC3339", "zone": "UTC"}}
 ```
 
-Forward parses with `from` and renders with `to`; reverse does the opposite.
-Layouts are Go reference layouts, or one of the names `RFC3339`,
-`RFC3339Nano`, `RFC1123`, `RFC1123Z`, `DateOnly` (`2006-01-02`), `DateTime`
-(`2006-01-02 15:04:05`) and `TimeOnly`. Timestamps without zone information
-are read in `zone` (an IANA name, default `UTC`), and output is rendered in
-that zone. Parts a layout does not carry (fractions of a second, the time of
-day with `DateOnly`) are lost on the way, which is the one place this
-converter is not exact.
+Forward parses the value with `from` and renders it with `to`; reverse does
+the opposite. Both layouts are required. A layout is a Go reference layout,
+or one of the names `RFC3339`, `RFC3339Nano`, `RFC1123`, `RFC1123Z`,
+`DateOnly` (`2006-01-02`), `DateTime` (`2006-01-02 15:04:05`) and `TimeOnly`
+(`15:04:05`). Timestamps without zone information are read in `zone`, an IANA
+zone name that defaults to `UTC`, and output is rendered in that zone. A
+non-string value or a timestamp the layout cannot parse is an error.
+
+Parts a layout does not carry (fractions of a second, the time of day with
+`DateOnly`) are lost on the way, which is the one place this converter is not
+exact.
+
+## absent
+
+Treats the listed values as *not present*, in both directions:
+
+```json
+{"absent": {"values": ["inf", null], "ignore_case": true}}
+```
+
+With it, a placeholder such as `"inf"` or `null` is dropped instead of
+copied. Pair it with the rule's `default` or `reverse_default` to restore the
+placeholder in the other direction:
+
+```json
+{"from": "cont_energy_cap_max", "to": "capacity.max",
+ "convert": [{"absent": {"values": ["inf"]}}, {"linear": {"divisor": 1000}}],
+ "reverse_default": "inf"}
+```
+
+`values` must be a non-empty list. Values compare structurally;
+`ignore_case` extends the match to strings that differ only in case and has
+no effect on other types.
 
 ## affix
 
@@ -130,24 +175,3 @@ Chained after `affix`, it checks the wrapped value:
 ```json
 {"from": "from.id", "to": "from", "convert": [{"affix": {"prefix": "n"}}, {"match": {"pattern": "[^_\\d]\\w*"}}]}
 ```
-
-## absent
-
-Treats the listed values as *not present*, in both directions:
-
-```json
-{"absent": {"values": ["inf", null], "ignore_case": true}}
-```
-
-With it, a placeholder such as `"inf"` or `null` is dropped instead of
-copied. Pair it with the rule's `default` or `reverse_default` to restore
-the placeholder in the other direction:
-
-```json
-{"from": "cont_energy_cap_max", "to": "capacity.max",
- "convert": [{"absent": {"values": ["inf"]}}, {"linear": {"divisor": 1000}}],
- "reverse_default": "inf"}
-```
-
-Values compare structurally; `ignore_case` extends the match to strings that
-differ only in case.
