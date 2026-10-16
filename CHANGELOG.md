@@ -8,6 +8,24 @@ with the keys concerned.
 
 ## [Unreleased]
 
+### Added
+
+- The default mapping (version 1.2.0) carries a building's demand per step
+  ([#2](https://github.com/enerplanet/T1K/issues/2)).
+  `properties.demand_series` maps `electricity`, `heat`, `cooling` and
+  `natural_gas` to series in kW; each becomes a `model.timeseries` entry in
+  MW and a demand technology naming it (`demand_$k`, `demand_heat_$k`,
+  `demand_cooling_$k`, `demand_natural_gas_$k`). An electricity series
+  replaces the constant load of `demand_energy`; without series, the job is
+  unchanged.
+- Heat, cooling and gas technologies: `air_source_heat_pump`,
+  `ground_source_heat_pump` and `electric_boilers` convert electricity to
+  heat, `gas_boiler` converts natural gas to heat and `air_conditioner`
+  electricity to cooling, each with `cont_energy_eff` as `efficiency`.
+  `gas_supply` becomes a gas import, `trade{gas_$k}`, priced like the
+  electricity tariffs. The `heat`, `cooling` and `natural_gas` carriers are
+  added only when a rule uses them.
+
 ## [0.1.0] - 2026-10-09
 
 ### Fixed

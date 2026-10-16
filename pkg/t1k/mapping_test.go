@@ -191,6 +191,125 @@ func TestMappingTechnologyKinds(t *testing.T) {
 	}
 }
 
+// withSeries gives a building hourly demand per carrier, in kW per step.
+func withSeries(b map[string]any, series map[string]any) map[string]any {
+	b["properties"].(map[string]any)["demand_series"] = series
+	return b
+}
+
+func TestMappingDemandSeries(t *testing.T) {
+	b := withSeries(building("1", 3745, nil), map[string]any{
+		"electricity": []any{0.38, 0.41, 0.37},
+		"heat":        []any{3.36, 3.86, 4.02},
+		"cooling":     []any{0, 1.5, 1.2},
+		"natural_gas": []any{0, 0, 0.21},
+	})
+	out := transform(t, payload(connection(b, trafo("trafo_9", 160), 0.05, "lv")))
+
+	elec := lookup(t, out, "model.technologies.demand_1").(map[string]any)
+	if elec["carrier_in"] != "electricity" || elec["demand_profile"] != "demand_1" || elec["node"] != "n1" {
+		t.Errorf("electricity demand = %v", elec)
+	}
+	heat := lookup(t, out, "model.technologies.demand_heat_1").(map[string]any)
+	if heat["role"] != "demand" || heat["carrier_in"] != "heat" || heat["demand_profile"] != "demand_heat_1" || heat["node"] != "n1" {
+		t.Errorf("heat demand = %v", heat)
+	}
+	for carrier, name := range map[string]string{"cooling": "demand_cooling_1", "natural_gas": "demand_natural_gas_1"} {
+		tech := lookup(t, out, "model.technologies."+name).(map[string]any)
+		if tech["role"] != "demand" || tech["carrier_in"] != carrier || tech["demand_profile"] != name || tech["node"] != "n1" {
+			t.Errorf("%s demand = %v", carrier, tech)
+		}
+	}
+	for name, want := range map[string][]float64{
+		"demand_1": {0.00038, 0.00041, 0.00037}, "demand_heat_1": {0.00336, 0.00386, 0.00402},
+		"demand_cooling_1": {0, 0.0015, 0.0012}, "demand_natural_gas_1": {0, 0, 0.00021},
+	} {
+		ts := lookup(t, out, "model.timeseries."+name).(map[string]any)
+		if ts["source"] != "inline" || ts["unit"] != "MW" {
+			t.Errorf("%s = %v", name, ts)
+		}
+		values := ts["values"].([]any)
+		if len(values) != len(want) {
+			t.Fatalf("%s has %d values, want %d", name, len(values), len(want))
+		}
+		for i, v := range values {
+			if got, _ := jsondoc.Number(v); got != want[i] {
+				t.Errorf("%s[%d] = %v, want %v (kW to MW)", name, i, v, want[i])
+			}
+		}
+	}
+	for _, carrier := range []string{"heat", "cooling", "natural_gas"} {
+		if lookup(t, out, "model.carriers."+carrier+".unit") != "MWh" {
+			t.Errorf("a %s demand needs the %s carrier", carrier, carrier)
+		}
+	}
+
+	// A series replaces the constant load even when the yearly number is 0.
+	zero := withSeries(building("2", 0, nil), map[string]any{"electricity": []any{0.5}})
+	out = transform(t, payload(connection(zero, trafo("trafo_9", 160), 0.05, "lv")))
+	if lookup(t, out, "model.technologies.demand_2.demand_profile") != "demand_2" {
+		t.Error("a series must not be gated by demand_energy")
+	}
+	for _, carrier := range []string{"heat", "cooling", "natural_gas"} {
+		expectAbsent(t, out, "model.carriers."+carrier)
+	}
+
+	// Carriers without a rule are not mapped.
+	steam := withSeries(building("3", 1000, nil), map[string]any{"steam": []any{1.0}})
+	out = transform(t, payload(connection(steam, trafo("trafo_9", 160), 0.05, "lv")))
+	expectNumber(t, out, "model.technologies.demand_3.demand_profile", 0.000114155)
+	expectAbsent(t, out, "model.timeseries")
+}
+
+func TestMappingHeatTechnologies(t *testing.T) {
+	techs := map[string]any{
+		"air_source_heat_pump":    map[string]any{"cont_energy_cap_max": "INF", "cont_energy_eff": 3.33, "cont_lifetime": 18, "cost_energy_cap": 900, "cost_interest_rate": 0.1},
+		"ground_source_heat_pump": map[string]any{"cont_energy_eff": 4.55, "cont_lifetime": 25, "cost_energy_cap": 1800, "cost_interest_rate": 0.1},
+		"electric_boilers":        map[string]any{"cont_energy_eff": 0.99, "cont_lifetime": 20, "cost_energy_cap": 150, "cost_interest_rate": 0.1},
+		"gas_boiler":              map[string]any{"cont_energy_eff": 0.9, "cont_lifetime": 18, "cost_energy_cap": 100, "cost_interest_rate": 0.1},
+		"air_conditioner":         map[string]any{"cont_energy_eff": 4.6, "cont_lifetime": 12, "cost_energy_cap": 450, "cost_interest_rate": 0.1},
+		"gas_supply":              map[string]any{"cont_energy_cap_max": "INF", "cost_om_con": 0.04},
+	}
+	out := transform(t, payload(connection(building("1", 3745, techs), trafo("trafo_9", 160), 0.05, "lv")))
+
+	for name, eff := range map[string]float64{"air_source_heat_pump": 3.33, "ground_source_heat_pump": 4.55, "electric_boilers": 0.99} {
+		tech := lookup(t, out, "model.technologies."+name+"_1").(map[string]any)
+		if tech["role"] != "conversion" || tech["node"] != "n1" || tech["carrier_in"] != "electricity" || tech["carrier_out"] != "heat" {
+			t.Errorf("%s essentials = %v", name, tech)
+		}
+		expectNumber(t, out, "model.technologies."+name+"_1.efficiency", eff)
+	}
+	expectNumber(t, out, "model.technologies.air_source_heat_pump_1.costs.monetary.investment_per_capacity", 900000)
+	expectNumber(t, out, "model.technologies.air_source_heat_pump_1.lifetime", 18)
+	expectAbsent(t, out, "model.technologies.air_source_heat_pump_1.capacity.max")
+
+	boiler := lookup(t, out, "model.technologies.gas_boiler_1").(map[string]any)
+	if boiler["role"] != "conversion" || boiler["carrier_in"] != "natural_gas" || boiler["carrier_out"] != "heat" || boiler["node"] != "n1" {
+		t.Errorf("gas boiler essentials = %v", boiler)
+	}
+	expectNumber(t, out, "model.technologies.gas_boiler_1.efficiency", 0.9)
+
+	ac := lookup(t, out, "model.technologies.air_conditioner_1").(map[string]any)
+	if ac["role"] != "conversion" || ac["carrier_in"] != "electricity" || ac["carrier_out"] != "cooling" || ac["node"] != "n1" {
+		t.Errorf("air conditioner essentials = %v", ac)
+	}
+	expectNumber(t, out, "model.technologies.air_conditioner_1.efficiency", 4.6)
+	expectNumber(t, out, "model.technologies.air_conditioner_1.costs.monetary.investment_per_capacity", 450000)
+
+	gas := lookup(t, out, "model.trade.gas_1").(map[string]any)
+	if gas["node"] != "n1" || gas["carrier"] != "natural_gas" {
+		t.Errorf("gas supply = %v", gas)
+	}
+	expectNumber(t, out, "model.trade.gas_1.import.price", 40)
+	expectAbsent(t, out, "model.trade.gas_1.import.limit")
+
+	for _, carrier := range []string{"heat", "cooling", "natural_gas"} {
+		if lookup(t, out, "model.carriers."+carrier+".unit") != "MWh" {
+			t.Errorf("the technologies need the %s carrier", carrier)
+		}
+	}
+}
+
 func TestMappingInfinityIsCaseInsensitiveAndNormalised(t *testing.T) {
 	techs := map[string]any{"pv_supply": map[string]any{"cont_energy_cap_max": "Inf", "cont_energy_cap_max_systemwide": "INF", "cost_om_annual_investment_fraction": 0.02, "cost_om_annual": 8}}
 	in := payload(connection(building("1", 100, techs), trafo("t", 100), 1, "lv"))
@@ -402,6 +521,15 @@ func TestMappingRoundTripAllKinds(t *testing.T) {
 		connection(building("2", 128000, nil), t1, 0.06, "lv"),
 		connection(t1, t2, 0.4, "mv"),
 		connection(building("3", 21000, nil), t2, 0.02, "lv"),
+		connection(withSeries(building("4", 4200, map[string]any{
+			"air_source_heat_pump": map[string]any{"cont_energy_eff": 3.33, "cont_lifetime": 18, "cost_energy_cap": 900},
+			"gas_boiler":           map[string]any{"cont_energy_eff": 0.9},
+			"air_conditioner":      map[string]any{"cont_energy_eff": 4.6, "cost_energy_cap": 450},
+			"gas_supply":           map[string]any{"cont_energy_cap_max": 12, "cost_om_con": 0.04},
+		}), map[string]any{
+			"electricity": []any{0.381234, 0.4, 0}, "heat": []any{3.36, 3.86, 4.02},
+			"cooling": []any{0, 1.5, 0}, "natural_gas": []any{0, 0, 0.21},
+		}), t2, 0.03, "lv"),
 	)
 	data, _ := json.Marshal(in)
 	task := NewTransformTask()

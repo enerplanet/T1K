@@ -56,13 +56,22 @@ define.
   transformer rating; EUR/kW, EUR/kWh and EUR/kW/a are multiplied by 1000.
 - **Annual demand as average power.** `demand_energy` (kWh/a) becomes a
   constant `demand_profile` in MW (divided by 8760 h and 1000), rounded to
-  nine decimals; the reverse rounds back to whole kWh. A time series can be
-  put in its place by pointing the rule at `model.timeseries`.
+  nine decimals; the reverse rounds back to whole kWh. A feature that
+  carries `properties.demand_series.electricity` gets that series instead
+  (see [Demand series](#demand-series)).
 - **Run settings from the Calliope template:** mode `plan`, objective
   `min_cost`, solver `highs`, unmet demand allowed at a penalty of 1e6
   EUR/MWh (`ensure_feasibility` with `bigM: 1e6`).
-- **Electricity only.** Heat demand (`demand_heat`) is carried by no rule;
-  the reverse writes 0.
+- **Heat, cooling and gas as series only.** `properties.demand_series` carries
+  a building's demand per step for `electricity`, `heat`, `cooling` and
+  `natural_gas` (gas used outside its technologies, such as for cooking).
+  The yearly `demand_heat` is carried by no rule; the reverse writes 0.
+- **Gas without a network.** `techs.gas_supply` becomes a gas import at the
+  building, priced like the electricity tariffs; a gas boiler converts that
+  gas to heat. No gas network is modelled.
+- **A carrier appears only when used.** `heat`, `cooling` and `natural_gas`
+  are added to `model.carriers` by the rules that use them, so a payload
+  without them yields the same job as before.
 
 ## Identifiers
 
@@ -131,7 +140,8 @@ connections is written once.
 | `id` | the node key | bind |
 | `geometry.coordinates[0]`, `[1]` | `coords.lon`, `coords.lat` | `number` |
 | `properties.osm_id` | `name` | copy |
-| `properties.demand_energy` (kWh/a, when > 0) | `technologies{demand_$k}` with `role` `demand`, `node` `n$k`, `carrier_in` `electricity`, `demand_profile` in MW | ÷ 8 760 000, rounded |
+| `properties.demand_energy` (kWh/a, when > 0 and no electricity series) | `technologies{demand_$k}` with `role` `demand`, `node` `n$k`, `carrier_in` `electricity`, `demand_profile` in MW | ÷ 8 760 000, rounded |
+| `properties.demand_series.<carrier>` | see [Demand series](#demand-series) | |
 | `properties.rated_power` (kVA, transformers) | `trade{grid_$k}` with `node` `n$k`, `import.limit` in MW, `import.price` 300, `export` | kW→MW |
 | `type`, `geometry.type`, `techs`, `custom_demand_timeseries`, `properties.id`, `session_id`, `created_at`, `modified_at`, `f_class_demands`, `demand_heat` | none | reverse constants: `Feature`, `Point`, `null`, `null`, the key, `""`, `null`, `null`, `null`, `0` |
 | `properties.feature_type`, `type`, `f_class`, `demand_profile`, `area` | none | reverse: `BasePOI`, `residential`, `residential`, `residential`, `0` for a node without a `grid_*` trade; `TopologyNode`, `transformer`, `null` area for one with |
@@ -139,12 +149,32 @@ connections is written once.
 `residential` is EnerPlanET's own fallback when a building has no usage
 class.
 
+### Demand series
+
+`properties.demand_series` maps a carrier to the building's demand per step,
+in kW, one value per model timestep. Each carrier becomes a named series and
+a demand technology that follows it:
+
+| EnerPlanET | Series | Technology |
+|---|---|---|
+| `demand_series.electricity` | `timeseries{demand_$k}` | `technologies{demand_$k}`, `carrier_in` `electricity` |
+| `demand_series.heat` | `timeseries{demand_heat_$k}` | `technologies{demand_heat_$k}`, `carrier_in` `heat` |
+| `demand_series.cooling` | `timeseries{demand_cooling_$k}` | `technologies{demand_cooling_$k}`, `carrier_in` `cooling` |
+| `demand_series.natural_gas` | `timeseries{demand_natural_gas_$k}` | `technologies{demand_natural_gas_$k}`, `carrier_in` `natural_gas` |
+
+A series is `{"source": "inline", "unit": "MW", "values": [...]}`, the values
+divided by 1000 and rounded to nine decimals; the reverse rounds back to six
+decimals in kW. The technology has `role` `demand`, `node` `n$k` and a
+`demand_profile` naming the series. An electricity series replaces the
+constant load of `demand_energy`, and the electricity technology keeps its
+key `demand_$k`. A key other than these four carriers is not carried.
+
 ### Technologies
 
 `techs.<key>` of a feature becomes `technologies{<key>_$k}` (or
 `trade{..._$k}` for the grid tariffs), with `node` set to `n$k`, the
 feature's node key.
-The shared rules, applied to every supply technology and the battery:
+The shared rules, applied to every supply and conversion technology and the battery:
 
 | EnerPlanET (kW, kWh, EUR) | MEME (MW, MWh, EUR) | Conversion |
 |---|---|---|
@@ -169,7 +199,11 @@ Per technology:
 | `battery_storage` | storage | `cont_energy_eff`→`storage.charge_eff` and `.discharge_eff`; `cont_storage_cap_max`/`_min`→`storage.energy_capacity.max`/`.min` (kWh→MWh, inf→absent); `cont_storage_loss`→`self_discharge`; `cont_storage_initial`→`initial_soc`; `cont_storage_discharge_depth`→`depth_of_discharge`; `cost_storage_cap`→`investment_per_energy_capacity` (×1000); `energy_capacity.expandable` `true` |
 | `wind_onshore` | supply, `performance` physics `wind` | `hub_height`, `rotor_diameter`, `nominal_power`, `turbine_id`→`params.*` |
 | `biomass_supply`, `geothermal_supply`, `water_supply` | supply | shared rules and `efficiency` only |
+| `air_source_heat_pump`, `ground_source_heat_pump`, `electric_boilers` | conversion, `carrier_in` `electricity`, `carrier_out` `heat` | `cont_energy_eff`→`efficiency` (the COP of a heat pump) |
+| `gas_boiler` | conversion, `carrier_in` `natural_gas`, `carrier_out` `heat` | `cont_energy_eff`→`efficiency` |
+| `air_conditioner` | conversion, `carrier_in` `electricity`, `carrier_out` `cooling` | `cont_energy_eff`→`efficiency` (the SEER) |
 | `households_supply`, `non_households_supply` | `trade{households_$k}`, `trade{non_households_$k}` | `cost_om_con`→`import.price` (×1000); `cont_energy_cap_max`→`import.limit` (inf→absent, kW→MW) |
+| `gas_supply` | `trade{gas_$k}`, `carrier` `natural_gas` | as the electricity tariffs |
 
 ### Not carried
 
@@ -219,8 +253,7 @@ forward again reproduces the job apart from the standalone building.
 
 `t1k -print-config > my-mapping.json` writes the embedded mapping out.
 Typical edits: change the tariff constants, drop the unmet-demand rule for
-PyPSA, replace the constant demand by a series (`demand_profile` naming a
-`model.timeseries` entry), or add rules for further building properties.
+PyPSA, or add rules for further building properties or demand carriers.
 To change the node prefix, edit it in the three places that agree on it: the
 key template `model.nodes{n$k}` of the two node rules, the `n$k` templates of
 the `node` references, and the `affix` prefix of the arc references.

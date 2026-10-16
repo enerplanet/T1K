@@ -106,8 +106,9 @@ intended pattern is one task per conversion job. Errors wrap `ErrConfig`,
 [`config/enerplanet-to-meme.json`](config/enerplanet-to-meme.json) maps the
 payload EnerPlanET sends to its simulation webservice onto MEME's canonical
 model: every topology feature becomes a node, every connection a transmission
-arc, buildings get a demand technology from their annual consumption, attached
-technologies (`pv_supply`, `battery_storage`, ...) become MEME technologies
+arc, buildings get a demand technology from their annual consumption or from
+their demand series per carrier (electricity, heat, cooling, gas), attached
+technologies (`pv_supply`, `battery_storage`, heat pumps, boilers, ...) become MEME technologies
 with kW converted to MW, and transformers become the grid connection. Every
 generated identifier satisfies Calliope's naming rule, and the reverse
 restores EnerPlanET's own ids. The
