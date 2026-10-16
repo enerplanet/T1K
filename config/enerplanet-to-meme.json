@@ -1,6 +1,6 @@
 {
   "name": "enerplanet-to-meme",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Converts the calculation payload EnerPlanET sends to its simulation webservice into a MEME job (POST /simulate body). The reverse direction rebuilds the calculation payload from a MEME job; fields MEME cannot carry are restored from the defaults noted on each rule.",
   "definitions": {
     "tech_capacity": [
@@ -26,6 +26,44 @@
       {"from": "cont_energy_eff", "to": "efficiency", "convert": "number"},
       {"use": "tech_capacity"},
       {"use": "tech_costs"}
+    ],
+    "heat_carrier": [
+      {"to": "/model.carriers.heat", "value": {"name": "Heat", "unit": "MWh"}}
+    ],
+    "cooling_carrier": [
+      {"to": "/model.carriers.cooling", "value": {"name": "Cooling", "unit": "MWh"}}
+    ],
+    "gas_carrier": [
+      {"to": "/model.carriers.natural_gas", "value": {"name": "Natural gas", "unit": "MWh"}}
+    ],
+    "conversion_tech": [
+      {"to": "role", "value": "conversion"},
+      {"to": "node", "template": "n$k"},
+      {"from": "cont_energy_eff", "to": "efficiency", "convert": "number", "description": "the COP of a heat pump, the SEER of an air conditioner, the efficiency of a boiler"},
+      {"use": "tech_capacity"},
+      {"use": "tech_costs"}
+    ],
+    "electric_heating_tech": [
+      {"use": "conversion_tech"},
+      {"to": "carrier_in", "value": "electricity"},
+      {"to": "carrier_out", "value": "heat"},
+      {"use": "heat_carrier"}
+    ],
+    "carrier_demand": [
+      {"to": "role", "value": "demand"},
+      {"to": "node", "template": "n$k"}
+    ],
+    "demand_series": [
+      {"to": "source", "value": "inline"},
+      {"to": "unit", "value": "MW"},
+      {"from": "[$t]", "to": "values[$t]", "convert": {"linear": {"divisor": 1000, "round_forward": 9, "round_reverse": 6}}, "description": "kW to MW, per step"}
+    ],
+    "gas_tariff": [
+      {"to": "node", "template": "n$k"},
+      {"to": "carrier", "value": "natural_gas"},
+      {"from": "cost_om_con", "to": "import.price", "convert": {"linear": {"factor": 1000}}, "description": "EUR/kWh to EUR/MWh"},
+      {"from": "cont_energy_cap_max", "to": "import.limit", "convert": [{"absent": {"values": ["inf"], "ignore_case": true}}, {"linear": {"divisor": 1000}}], "reverse_default": "inf", "description": "kW to MW"},
+      {"use": "gas_carrier"}
     ],
     "grid_tariff": [
       {"to": "node", "template": "n$k"},
@@ -58,13 +96,76 @@
       {"from": "properties.osm_id", "to": "name"},
       {
         "each": {"from": "properties", "to": "/model.technologies{demand_$k}"},
-        "when": {"forward": {"path": "demand_energy", "gt": 0}},
-        "description": "the building's annual electricity demand as a constant load",
+        "when": {"forward": [{"path": "demand_energy", "gt": 0}, {"path": "demand_series.electricity", "exists": false}], "reverse": {"path": "demand_profile", "gte": 0}},
+        "description": "the building's annual electricity demand as a constant load, when no series is given; the reverse condition leaves a series reference to the rule below",
         "rules": [
           {"to": "role", "value": "demand"},
           {"to": "node", "template": "n$k"},
           {"to": "carrier_in", "value": "electricity"},
           {"from": "demand_energy", "to": "demand_profile", "convert": {"linear": {"divisor": 8760000, "round_forward": 9, "round_reverse": 0}}, "description": "kWh/a to average MW"}
+        ]
+      },
+      {
+        "each": {"from": "properties.demand_series.electricity", "to": "/model.timeseries{demand_$k}"},
+        "description": "the building's electricity demand per step, in kW, as a named series",
+        "rules": [{"use": "demand_series"}]
+      },
+      {
+        "each": {"from": "properties", "to": "/model.technologies{demand_$k}"},
+        "when": {"forward": {"path": "demand_series.electricity", "exists": true}},
+        "description": "the electricity demand that follows the series",
+        "rules": [
+          {"use": "carrier_demand"},
+          {"to": "carrier_in", "value": "electricity"},
+          {"to": "demand_profile", "template": "demand_$k"}
+        ]
+      },
+      {
+        "each": {"from": "properties.demand_series.heat", "to": "/model.timeseries{demand_heat_$k}"},
+        "description": "the building's heat demand per step, in kW, as a named series; the annual demand_heat is not mapped",
+        "rules": [{"use": "demand_series"}]
+      },
+      {
+        "each": {"from": "properties", "to": "/model.technologies{demand_heat_$k}"},
+        "when": {"forward": {"path": "demand_series.heat", "exists": true}},
+        "description": "the heat demand that follows the series",
+        "rules": [
+          {"use": "carrier_demand"},
+          {"to": "carrier_in", "value": "heat"},
+          {"to": "demand_profile", "template": "demand_heat_$k"},
+          {"use": "heat_carrier"}
+        ]
+      },
+      {
+        "each": {"from": "properties.demand_series.cooling", "to": "/model.timeseries{demand_cooling_$k}"},
+        "description": "the building's cooling demand per step, in kW, as a named series",
+        "rules": [{"use": "demand_series"}]
+      },
+      {
+        "each": {"from": "properties", "to": "/model.technologies{demand_cooling_$k}"},
+        "when": {"forward": {"path": "demand_series.cooling", "exists": true}},
+        "description": "the cooling demand that follows the series",
+        "rules": [
+          {"use": "carrier_demand"},
+          {"to": "carrier_in", "value": "cooling"},
+          {"to": "demand_profile", "template": "demand_cooling_$k"},
+          {"use": "cooling_carrier"}
+        ]
+      },
+      {
+        "each": {"from": "properties.demand_series.natural_gas", "to": "/model.timeseries{demand_natural_gas_$k}"},
+        "description": "the building's gas demand per step outside its technologies (cooking), in kW, as a named series",
+        "rules": [{"use": "demand_series"}]
+      },
+      {
+        "each": {"from": "properties", "to": "/model.technologies{demand_natural_gas_$k}"},
+        "when": {"forward": {"path": "demand_series.natural_gas", "exists": true}},
+        "description": "the gas demand that follows the series",
+        "rules": [
+          {"use": "carrier_demand"},
+          {"to": "carrier_in", "value": "natural_gas"},
+          {"to": "demand_profile", "template": "demand_natural_gas_$k"},
+          {"use": "gas_carrier"}
         ]
       },
       {
@@ -134,6 +235,43 @@
       {
         "each": {"from": "techs.water_supply", "to": "/model.technologies{water_supply_$k}"},
         "rules": [{"use": "supply_tech"}]
+      },
+      {
+        "each": {"from": "techs.air_source_heat_pump", "to": "/model.technologies{air_source_heat_pump_$k}"},
+        "rules": [{"use": "electric_heating_tech"}]
+      },
+      {
+        "each": {"from": "techs.ground_source_heat_pump", "to": "/model.technologies{ground_source_heat_pump_$k}"},
+        "rules": [{"use": "electric_heating_tech"}]
+      },
+      {
+        "each": {"from": "techs.electric_boilers", "to": "/model.technologies{electric_boilers_$k}"},
+        "rules": [{"use": "electric_heating_tech"}]
+      },
+      {
+        "each": {"from": "techs.gas_boiler", "to": "/model.technologies{gas_boiler_$k}"},
+        "description": "burns gas from the node's gas supply",
+        "rules": [
+          {"use": "conversion_tech"},
+          {"to": "carrier_in", "value": "natural_gas"},
+          {"to": "carrier_out", "value": "heat"},
+          {"use": "gas_carrier"},
+          {"use": "heat_carrier"}
+        ]
+      },
+      {
+        "each": {"from": "techs.air_conditioner", "to": "/model.technologies{air_conditioner_$k}"},
+        "rules": [
+          {"use": "conversion_tech"},
+          {"to": "carrier_in", "value": "electricity"},
+          {"to": "carrier_out", "value": "cooling"},
+          {"use": "cooling_carrier"}
+        ]
+      },
+      {
+        "each": {"from": "techs.gas_supply", "to": "/model.trade{gas_$k}"},
+        "description": "gas bought from an unlimited source at a fixed price, as households_supply does for electricity; no gas network is modelled",
+        "rules": [{"use": "gas_tariff"}]
       },
       {
         "each": {"from": "techs.households_supply", "to": "/model.trade{households_$k}"},
