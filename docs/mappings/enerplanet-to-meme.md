@@ -113,7 +113,8 @@ guessed at.
 | `resolution` (minutes) | `model.time.resolution` | `lookup`: 15 `15min`, 30 `30min`, 60 `1H` |
 | | `model.metadata.description` | constant |
 | | `model.carriers.electricity` | constant `{"name": "Electricity", "unit": "MWh"}` |
-| | `experiment.mode`, `.objective`, `.solver.name`, `.allow_unmet_demand` | constants `plan`, `min_cost`, `highs`, `{enabled, penalty_price 1e6}` |
+| `mode` | `experiment.mode` | `lookup`: `plan`, `operate`; absent gives `plan` |
+| | `experiment.objective`, `.solver.name`, `.allow_unmet_demand` | constants `min_cost`, `highs`, `{enabled, penalty_price 1e6}` |
 | `user_id`, `session_id`, `callback_url`, `country`, `lkr` | none | reverse writes `""` |
 | `pypsa` | none | reverse writes EnerPlanET's default line and transformer types |
 | `custom_demand_time_series`, `parameters` | none | not carried |

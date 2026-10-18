@@ -3,6 +3,7 @@
   "country": "",
   "end_date": "2018-01-02T00:00:00.000Z",
   "lkr": "",
+  "mode": "plan",
   "model_id": "158_1790500000",
   "pypsa": {
     "line_type_lv": "NAYY 4x150 SE",

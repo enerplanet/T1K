@@ -1,6 +1,6 @@
 {
   "name": "enerplanet-to-meme",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "description": "Converts the calculation payload EnerPlanET sends to its simulation webservice into a MEME job (POST /simulate body). The reverse direction rebuilds the calculation payload from a MEME job; fields MEME cannot carry are restored from the defaults noted on each rule.",
   "definitions": {
     "tech_capacity": [
@@ -312,7 +312,7 @@
     {"from": "end_date", "to": "model.time.end", "convert": {"datetime": {"from": "2006-01-02T15:04:05.000Z", "to": "RFC3339"}}},
     {"from": "resolution", "to": "model.time.resolution", "convert": {"lookup": {"pairs": [[15, "15min"], [30, "30min"], [60, "1H"]]}}, "description": "minutes to a pandas frequency"},
     {"to": "model.carriers.electricity", "value": {"name": "Electricity", "unit": "MWh"}},
-    {"to": "experiment.mode", "value": "plan"},
+    {"from": "mode", "to": "experiment.mode", "default": "plan", "convert": {"lookup": {"pairs": [["plan", "plan"], ["operate", "operate"]], "strict": true}}, "description": "operate fixes every size at capacity.existing or capacity.max"},
     {"to": "experiment.objective", "value": "min_cost"},
     {"to": "experiment.solver.name", "value": "highs"},
     {"to": "experiment.allow_unmet_demand", "value": {"enabled": true, "penalty_price": 1000000}, "description": "mirrors ensure_feasibility with bigM 1e6 in the Calliope template; PyPSA rejects unmet demand, remove this rule for that target"},

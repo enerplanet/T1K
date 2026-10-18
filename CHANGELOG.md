@@ -31,6 +31,10 @@ with the keys concerned.
   supply technology `pv_supply_${k}_$j` whose `performance.precomputed`
   names it, with the shared capacity and cost rules. `techs.pv_supply` is
   mapped as before.
+- Operate mode (mapping version 1.4.0,
+  [#6](https://github.com/enerplanet/T1K/issues/6)). The payload's `mode`,
+  `plan` or `operate`, becomes `experiment.mode`; without it the mode stays
+  `plan`.
 
 ## [0.1.0] - 2026-10-09
 

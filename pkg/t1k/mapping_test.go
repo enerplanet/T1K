@@ -372,6 +372,25 @@ func TestMappingPVArrays(t *testing.T) {
 	}
 }
 
+func TestMappingOperateMode(t *testing.T) {
+	b := building("1", 3745, map[string]any{"pv_supply": map[string]any{"cont_energy_cap_min": 8, "cont_energy_cap_max": 8}})
+	in := payload(connection(b, trafo("trafo_9", 160), 0.05, "lv"), connection(trafo("trafo_9", 160), trafo("trafo_10", 250), 1.2, "mv"))
+	if got := lookup(t, transform(t, in), "experiment.mode"); got != "plan" {
+		t.Errorf("mode without a payload mode = %v, want plan", got)
+	}
+
+	in["mode"] = "operate"
+	out := transform(t, in)
+	if got := lookup(t, out, "experiment.mode"); got != "operate" {
+		t.Errorf("experiment.mode = %v, want operate", got)
+	}
+	expectNumber(t, out, "model.technologies.pv_supply_1.capacity.min", 0.008)
+	expectNumber(t, out, "model.technologies.pv_supply_1.capacity.max", 0.008)
+	if got := lookup(t, reverseOf(t, out), "mode"); got != "operate" {
+		t.Errorf("reverse mode = %v, want operate", got)
+	}
+}
+
 func TestMappingInfinityIsCaseInsensitiveAndNormalised(t *testing.T) {
 	techs := map[string]any{"pv_supply": map[string]any{"cont_energy_cap_max": "Inf", "cont_energy_cap_max_systemwide": "INF", "cost_om_annual_investment_fraction": 0.02, "cost_om_annual": 8}}
 	in := payload(connection(building("1", 100, techs), trafo("t", 100), 1, "lv"))
@@ -483,6 +502,7 @@ func TestMappingRejectsUnconvertibleValues(t *testing.T) {
 		{"non-numeric capacity", func(in map[string]any) {
 			in["topology"].([]any)[0].(map[string]any)["from"].(map[string]any)["techs"] = map[string]any{"pv_supply": map[string]any{"cont_energy_cap_max": "lots"}}
 		}, "cont_energy_cap_max: linear:"},
+		{"unknown mode", func(in map[string]any) { in["mode"] = "dispatch" }, "mode: lookup: no pair"},
 		{"feature without an id", func(in map[string]any) {
 			delete(in["topology"].([]any)[0].(map[string]any)["from"].(map[string]any), "id")
 		}, `bind $k: "id" not found`},
