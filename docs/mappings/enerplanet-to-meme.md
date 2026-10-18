@@ -85,6 +85,7 @@ mapping therefore generates every key and reference as follows:
 | transformer id `trafo_2585` | node `ntrafo_2585` | `node: "ntrafo_2585"` in its trade; `from`/`to` in arcs |
 | demand of building `1` | technology `demand_1` | |
 | `techs.pv_supply` of building `1` | technology `pv_supply_1` | |
+| `techs.pv_arrays[0]` of building `1` | technology `pv_supply_1_0`, series `pv_1_0` | `performance.precomputed: "pv_1_0"` |
 | `techs.households_supply` of building `1` | trade `households_1` | |
 | transformer `trafo_2585` rating | trade `grid_trafo_2585` | |
 | connection at position 0 with pipe `lv` | arc `lv_0` | |
@@ -169,6 +170,22 @@ decimals in kW. The technology has `role` `demand`, `node` `n$k` and a
 constant load of `demand_energy`, and the electricity technology keeps its
 key `demand_$k`. A key other than these four carriers is not carried.
 
+### PV arrays
+
+`techs.pv_arrays` lists a building's PV arrays, one per roof or wall surface,
+each with its own production profile. Array `$j` (its position in the list)
+becomes:
+
+| EnerPlanET | MEME |
+|---|---|
+| `pv_arrays[$j].profile` | `timeseries{pv_${k}_$j}`: `{"source": "inline", "unit": "fraction", "values": [...]}`, kW AC per kW DC per step, unchanged |
+| `pv_arrays[$j]` | `technologies{pv_supply_${k}_$j}`: supply of `electricity` at `n$k`, `performance` physics `pv` with `precomputed` `pv_${k}_$j` |
+| `tilt`, `azimuth`, `losses` | `performance.params.tilt`, `.azimuth`, `.loss` |
+
+Capacity and cost fields follow the shared rules below; `cont_energy_cap_max`
+is the array's largest capacity in kW. `surface_id` is not carried.
+`techs.pv_supply` stays mapped as one technology without a profile.
+
 ### Technologies
 
 `techs.<key>` of a feature becomes `technologies{<key>_$k}` (or
@@ -213,8 +230,8 @@ process parameters of biomass and geothermal exist to generate resource
 profiles outside the optimiser; MEME has no PySAM, so they have no
 counterpart. `cont_resource_unit`, `cont_energy_cap_scale`, `cont_export_cap`,
 `cost_export` and `cont_resource_eff` likewise have none. A PV or wind
-profile must therefore be supplied to MEME separately, as a `precomputed`
-series or through TentaCron's resolvents.
+profile must therefore be supplied to MEME separately: through
+`techs.pv_arrays` (see [PV arrays](#pv-arrays)) or TentaCron's resolvents.
 
 ## MEME target compatibility
 
