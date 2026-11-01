@@ -148,7 +148,7 @@ connections is written once.
 | `properties.demand_energy` (kWh/a, when > 0 and no electricity series) | `technologies{demand_$k}` with `role` `demand`, `node` `n$k`, `carrier_in` `electricity`, `demand_profile` in MW | ÷ 8 760 000, rounded |
 | `properties.demand_series.<carrier>` | see [Demand series](#demand-series) | |
 | `properties.rated_power` (kVA, transformers) | `trade{grid_$k}` with `node` `n$k`, `import.limit` in MW, `export` | kW→MW |
-| `properties.grid_import_price` (EUR/kWh, transformers) | `trade{grid_$k}.import.price`, 300 when absent | ×1000 |
+| `properties.grid_import_price` (EUR/kWh, transformers) | `trade{grid_$k}.import.price`, 300 when absent; reverse omits a price of 300, so 0.3 is not restored | ×1000 |
 | `properties.grid_export_price` (EUR/kWh, transformers) | `trade{grid_$k}.export.price`, with `export.limit` from `rated_power` | ×1000 |
 | `type`, `geometry.type`, `techs`, `custom_demand_timeseries`, `properties.id`, `session_id`, `created_at`, `modified_at`, `f_class_demands`, `demand_heat` | none | reverse constants: `Feature`, `Point`, `null`, `null`, the key, `""`, `null`, `null`, `null`, `0` |
 | `properties.feature_type`, `type`, `f_class`, `demand_profile`, `area` | none | reverse: `BasePOI`, `residential`, `residential`, `residential`, `0` for a node without a `grid_*` trade; `TopologyNode`, `transformer`, `null` area for one with |
