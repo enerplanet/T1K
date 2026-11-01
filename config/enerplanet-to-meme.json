@@ -1,6 +1,6 @@
 {
   "name": "enerplanet-to-meme",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "description": "Converts the calculation payload EnerPlanET sends to its simulation webservice into a MEME job (POST /simulate body). The reverse direction rebuilds the calculation payload from a MEME job; fields MEME cannot carry are restored from the defaults noted on each rule.",
   "definitions": {
     "tech_capacity": [
@@ -211,7 +211,8 @@
           {"to": "performance.precomputed", "template": "pv_${k}_$j"},
           {"from": "tilt", "to": "performance.params.tilt", "convert": "number"},
           {"from": "azimuth", "to": "performance.params.azimuth", "convert": "number"},
-          {"from": "losses", "to": "performance.params.loss", "convert": "number"}
+          {"from": "losses", "to": "performance.params.loss", "convert": "number"},
+          {"from": "cont_parasitic_eff", "to": "native.calliope.flow_out_parasitic_eff", "convert": "number"}
         ]
       },
       {

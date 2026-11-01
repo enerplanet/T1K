@@ -35,6 +35,9 @@ with the keys concerned.
   [#6](https://github.com/enerplanet/T1K/issues/6)). The payload's `mode`,
   `plan` or `operate`, becomes `experiment.mode`; without it the mode stays
   `plan`.
+- A PV array's `cont_parasitic_eff` becomes
+  `native.calliope.flow_out_parasitic_eff` of its technology, as for
+  `techs.pv_supply` (mapping version 1.5.0).
 
 ## [0.1.0] - 2026-10-09
 

@@ -315,7 +315,7 @@ func TestMappingPVArrays(t *testing.T) {
 		return map[string]any{
 			"surface_id": surface, "tilt": tilt, "azimuth": azimuth, "losses": 14,
 			"cont_energy_cap_max": capMax, "cont_lifetime": 25, "cost_energy_cap": 1100, "cost_interest_rate": 0.1,
-			"profile": profile,
+			"cont_parasitic_eff": 0.98, "profile": profile,
 		}
 	}
 	techs := map[string]any{"pv_arrays": []any{
@@ -339,6 +339,7 @@ func TestMappingPVArrays(t *testing.T) {
 		expectNumber(t, out, "model.technologies."+name+".performance.params.azimuth", want.azimuth)
 		expectNumber(t, out, "model.technologies."+name+".capacity.max", want.capMax)
 		expectNumber(t, out, "model.technologies."+name+".costs.monetary.investment_per_capacity", 1100000)
+		expectNumber(t, out, "model.technologies."+name+".native.calliope.flow_out_parasitic_eff", 0.98)
 		expectAbsent(t, out, "model.technologies."+name+".surface_id")
 
 		ts := lookup(t, out, "model.timeseries.pv_1_"+j).(map[string]any)
@@ -366,6 +367,9 @@ func TestMappingPVArrays(t *testing.T) {
 	first := arrays[0].(map[string]any)
 	if got, _ := jsondoc.Number(first["azimuth"]); got != 180 {
 		t.Errorf("reverse array 0 azimuth = %v", first["azimuth"])
+	}
+	if got, _ := jsondoc.Number(first["cont_parasitic_eff"]); got != 0.98 {
+		t.Errorf("reverse array 0 cont_parasitic_eff = %v", first["cont_parasitic_eff"])
 	}
 	if got := first["profile"].([]any); len(got) != 3 {
 		t.Errorf("reverse array 0 profile = %v", got)

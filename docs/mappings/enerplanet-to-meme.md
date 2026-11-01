@@ -182,6 +182,7 @@ becomes:
 | `pv_arrays[$j].profile` | `timeseries{pv_${k}_$j}`: `{"source": "inline", "unit": "fraction", "values": [...]}`, kW AC per kW DC per step, unchanged |
 | `pv_arrays[$j]` | `technologies{pv_supply_${k}_$j}`: supply of `electricity` at `n$k`, `performance` physics `pv` with `precomputed` `pv_${k}_$j` |
 | `tilt`, `azimuth`, `losses` | `performance.params.tilt`, `.azimuth`, `.loss` |
+| `cont_parasitic_eff` | `native.calliope.flow_out_parasitic_eff` |
 
 Capacity and cost fields follow the shared rules below; `cont_energy_cap_max`
 is the array's largest capacity in kW. `surface_id` is not carried.
