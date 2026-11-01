@@ -310,6 +310,68 @@ func TestMappingHeatTechnologies(t *testing.T) {
 	}
 }
 
+func TestMappingPVArrays(t *testing.T) {
+	array := func(surface string, tilt, azimuth, capMax float64, profile ...any) map[string]any {
+		return map[string]any{
+			"surface_id": surface, "tilt": tilt, "azimuth": azimuth, "losses": 14,
+			"cont_energy_cap_max": capMax, "cont_lifetime": 25, "cost_energy_cap": 1100, "cost_interest_rate": 0.1,
+			"profile": profile,
+		}
+	}
+	techs := map[string]any{"pv_arrays": []any{
+		array("roof-a", 35, 180, 12.4, 0, 0.42, 0.61),
+		array("roof-b", 35, 0, 8.0, 0, 0.11, 0.2),
+	}}
+	out := transform(t, payload(connection(building("1", 3745, techs), trafo("trafo_9", 160), 0.05, "lv")))
+
+	for j, want := range map[string]struct {
+		azimuth, capMax float64
+		profile         []float64
+	}{"0": {180, 0.0124, []float64{0, 0.42, 0.61}}, "1": {0, 0.008, []float64{0, 0.11, 0.2}}} {
+		name := "pv_supply_1_" + j
+		tech := lookup(t, out, "model.technologies."+name).(map[string]any)
+		if tech["role"] != "supply" || tech["node"] != "n1" || tech["carrier_out"] != "electricity" {
+			t.Errorf("%s essentials = %v", name, tech)
+		}
+		if lookup(t, out, "model.technologies."+name+".performance.precomputed") != "pv_1_"+j {
+			t.Errorf("%s must name its own series", name)
+		}
+		expectNumber(t, out, "model.technologies."+name+".performance.params.azimuth", want.azimuth)
+		expectNumber(t, out, "model.technologies."+name+".capacity.max", want.capMax)
+		expectNumber(t, out, "model.technologies."+name+".costs.monetary.investment_per_capacity", 1100000)
+		expectAbsent(t, out, "model.technologies."+name+".surface_id")
+
+		ts := lookup(t, out, "model.timeseries.pv_1_"+j).(map[string]any)
+		if ts["source"] != "inline" || ts["unit"] != "fraction" {
+			t.Errorf("pv_1_%s = %v", j, ts)
+		}
+		values := ts["values"].([]any)
+		if len(values) != len(want.profile) {
+			t.Fatalf("pv_1_%s has %d values, want %d", j, len(values), len(want.profile))
+		}
+		for i, v := range values {
+			if got, _ := jsondoc.Number(v); got != want.profile[i] {
+				t.Errorf("pv_1_%s[%d] = %v, want %v", j, i, v, want.profile[i])
+			}
+		}
+	}
+	expectAbsent(t, out, "model.technologies.pv_supply_1")
+
+	back := reverseOf(t, out)
+	conn := lookup(t, back, "topology").([]any)[0].(map[string]any)
+	arrays := conn["from"].(map[string]any)["techs"].(map[string]any)["pv_arrays"].([]any)
+	if len(arrays) != 2 {
+		t.Fatalf("reverse restored %d arrays, want 2", len(arrays))
+	}
+	first := arrays[0].(map[string]any)
+	if got, _ := jsondoc.Number(first["azimuth"]); got != 180 {
+		t.Errorf("reverse array 0 azimuth = %v", first["azimuth"])
+	}
+	if got := first["profile"].([]any); len(got) != 3 {
+		t.Errorf("reverse array 0 profile = %v", got)
+	}
+}
+
 func TestMappingInfinityIsCaseInsensitiveAndNormalised(t *testing.T) {
 	techs := map[string]any{"pv_supply": map[string]any{"cont_energy_cap_max": "Inf", "cont_energy_cap_max_systemwide": "INF", "cost_om_annual_investment_fraction": 0.02, "cost_om_annual": 8}}
 	in := payload(connection(building("1", 100, techs), trafo("t", 100), 1, "lv"))

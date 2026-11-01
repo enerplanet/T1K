@@ -25,6 +25,12 @@ with the keys concerned.
   `gas_supply` becomes a gas import, `trade{gas_$k}`, priced like the
   electricity tariffs. The `heat`, `cooling` and `natural_gas` carriers are
   added only when a rule uses them.
+- PV arrays with their own production profiles (mapping version 1.3.0).
+  `techs.pv_arrays` lists a building's arrays, one per surface; array `$j`
+  becomes the series `pv_${k}_$j` (unit `fraction`, kW AC per kW DC) and the
+  supply technology `pv_supply_${k}_$j` whose `performance.precomputed`
+  names it, with the shared capacity and cost rules. `techs.pv_supply` is
+  mapped as before.
 
 ## [0.1.0] - 2026-10-09
 

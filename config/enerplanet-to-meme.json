@@ -1,6 +1,6 @@
 {
   "name": "enerplanet-to-meme",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "description": "Converts the calculation payload EnerPlanET sends to its simulation webservice into a MEME job (POST /simulate body). The reverse direction rebuilds the calculation payload from a MEME job; fields MEME cannot carry are restored from the defaults noted on each rule.",
   "definitions": {
     "tech_capacity": [
@@ -190,6 +190,28 @@
           {"from": "azimuth", "to": "performance.params.azimuth", "convert": "number"},
           {"from": "losses", "to": "performance.params.loss", "convert": "number"},
           {"from": "cont_parasitic_eff", "to": "native.calliope.flow_out_parasitic_eff", "convert": "number"}
+        ]
+      },
+      {
+        "each": {"from": "techs.pv_arrays[$j].profile", "to": "/model.timeseries{pv_${k}_$j}"},
+        "description": "the array's production per step, in kW AC per kW DC, as a named series",
+        "rules": [
+          {"to": "source", "value": "inline"},
+          {"to": "unit", "value": "fraction"},
+          {"from": "[$t]", "to": "values[$t]", "convert": "number"}
+        ]
+      },
+      {
+        "each": {"from": "techs.pv_arrays[$j]", "to": "/model.technologies{pv_supply_${k}_$j}"},
+        "description": "one PV array of the building, on one surface, following its own production series; surface_id is not carried",
+        "rules": [
+          {"use": "supply_tech"},
+          {"to": "performance.type", "value": "physics"},
+          {"to": "performance.model", "value": "pv"},
+          {"to": "performance.precomputed", "template": "pv_${k}_$j"},
+          {"from": "tilt", "to": "performance.params.tilt", "convert": "number"},
+          {"from": "azimuth", "to": "performance.params.azimuth", "convert": "number"},
+          {"from": "losses", "to": "performance.params.loss", "convert": "number"}
         ]
       },
       {
