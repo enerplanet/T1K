@@ -38,6 +38,13 @@ with the keys concerned.
 - A PV array's `cont_parasitic_eff` becomes
   `native.calliope.flow_out_parasitic_eff` of its technology, as for
   `techs.pv_supply` (mapping version 1.5.0).
+- Grid prices per transformer (mapping version 1.6.0,
+  [#8](https://github.com/enerplanet/T1K/issues/8)). A `TopologyNode` that
+  carries `grid_import_price` or `grid_export_price`, in EUR/kWh, gets them as
+  the `trade{grid_$k}` import and export prices in EUR/MWh; a feed-in price
+  also limits export to the transformer rating. Without them the import price
+  stays 300 EUR/MWh and export stays unpaid, so existing payloads translate
+  unchanged.
 
 ## [0.1.0] - 2026-10-09
 
