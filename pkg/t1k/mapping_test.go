@@ -191,6 +191,38 @@ func TestMappingTechnologyKinds(t *testing.T) {
 	}
 }
 
+func TestMappingGridPrices(t *testing.T) {
+	priced := trafo("trafo_9", 400)
+	priced["properties"].(map[string]any)["grid_import_price"] = 0.34
+	priced["properties"].(map[string]any)["grid_export_price"] = 0.079
+	out := transform(t, payload(connection(building("1", 3745, nil), priced, 0.05, "lv")))
+	expectNumber(t, out, "model.trade.grid_trafo_9.import.price", 340)
+	expectNumber(t, out, "model.trade.grid_trafo_9.import.limit", 0.4)
+	expectNumber(t, out, "model.trade.grid_trafo_9.export.price", 79)
+	expectNumber(t, out, "model.trade.grid_trafo_9.export.limit", 0.4)
+	trafoProps := func(doc map[string]any) map[string]any {
+		return lookup(t, doc, "topology").([]any)[0].(map[string]any)["to"].(map[string]any)["properties"].(map[string]any)
+	}
+	restored := trafoProps(reverseOf(t, out))
+	for key, want := range map[string]float64{"grid_import_price": 0.34, "grid_export_price": 0.079, "rated_power": 400} {
+		if got, ok := jsondoc.Number(restored[key]); !ok || got != want {
+			t.Errorf("%s restored = %v, want %v", key, restored[key], want)
+		}
+	}
+
+	out = transform(t, payload(connection(building("1", 3745, nil), trafo("trafo_9", 400), 0.05, "lv")))
+	expectNumber(t, out, "model.trade.grid_trafo_9.import.price", 300)
+	if export := lookup(t, out, "model.trade.grid_trafo_9.export").(map[string]any); len(export) != 0 {
+		t.Errorf("without a feed-in price the export block stays empty, got %v", export)
+	}
+	back := trafoProps(reverseOf(t, out))
+	for _, key := range []string{"grid_import_price", "grid_export_price"} {
+		if _, ok := back[key]; ok {
+			t.Errorf("%s restored although the payload had none: %v", key, back[key])
+		}
+	}
+}
+
 // withSeries gives a building hourly demand per carrier, in kW per step.
 func withSeries(b map[string]any, series map[string]any) map[string]any {
 	b["properties"].(map[string]any)["demand_series"] = series
